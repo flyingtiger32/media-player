@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Aleatorio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/random.css') }}">
+</head>
+
+<body>
+
+    <div class="player-container">
+
+        <div class="media-viewport">
+            <div class="media-wrapper">
+                <img id="web-image" class="hidden" src="" alt="Multimedia">
+                <video id="web-video" class="hidden" autoplay></video>
+
+                <div class="player-overlay">
+                    <button id="overlay-restart" class="btn-overlay btn-overlay-sm" title="Reiniciar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                            <line x1="5" y1="19" x2="5" y2="5"></line>
+                        </svg>
+                    </button>
+
+                    <button id="overlay-back-15" class="btn-overlay btn-overlay-text" title="-15 segundos">-15s</button>
+                    <button id="overlay-toggle" class="btn-overlay btn-overlay-lg" title="Reproducir/Pausar">
+                        <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                        <svg id="icon-play" class="hidden" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <button id="overlay-forward-15" class="btn-overlay btn-overlay-text"
+                        title="+15 segundos">+15s</button>
+
+                    <button id="overlay-next-btn" class="btn-overlay btn-overlay-sm" title="Siguiente">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                            <line x1="19" y1="5" x2="19" y2="19"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="web-control-frame">
+            <div class="progress-bar-container" id="progress-container">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="controls-row">
+                <div id="time-left" class="time-box">00:00</div>
+
+                <div class="buttons-group">
+                    <span id="file-counter"
+                        style="color: #94a3b8; font-family: monospace; font-size: 0.95rem; margin-right: 10px;">(0 /
+                        0)</span>
+                    <button id="btn-web-back" class="btn-sm" onclick="window.location.href='/'">🏠 Home</button>
+                    <button id="btn-web-loop" class="btn-sm">🔁 Repetir: OFF</button>
+                    <button id="btn-web-auto" class="btn-sm btn-info">⏸ Auto-skip: ON</button>
+                </div>
+
+                <div id="time-right" class="time-box">00:00</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+</body>
+
+</html>

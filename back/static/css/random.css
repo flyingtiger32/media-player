@@ -1,0 +1,235 @@
+body {
+    background-color: #000000;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Contenedor principal a pantalla completa */
+.player-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* ZONA MULTIMEDIA: Ocupa toda la pantalla y deja un margen abajo para la barra */
+.media-viewport {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* Ya no le restamos los 85px de la barra */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000000;
+    overflow: hidden;
+}
+
+.media-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.media-wrapper img,
+.media-wrapper video {
+    max-width: 100%;
+    max-height: 100vh;
+    /* Aprovechamiento total del largo de la pantalla */
+    object-fit: contain;
+}
+
+/* CAPA DE CONTROLES FLOTANTES (OVERLAY) */
+.player-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    opacity: 0;
+    pointer-events: none;
+    /* Evita que bloquee los clicks si está oculto */
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Transición suave y rápida */
+    z-index: 10;
+    box-sizing: border-box;
+}
+
+
+/* Botones del circuito flotante */
+.btn-overlay {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    transition: transform 0.1s ease, background 0.2s ease;
+}
+
+.btn-overlay-lg {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+}
+
+.btn-overlay-lg svg {
+    width: 32px;
+    height: 32px;
+}
+
+.btn-overlay-sm {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.btn-overlay-sm svg {
+    width: 22px;
+    height: 22px;
+}
+
+.btn-overlay-text {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-family: monospace;
+    padding: 10px 15px;
+    color: #f1f5f9;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    cursor: pointer;
+    transition: transform 0.1s ease, color 0.2s ease;
+}
+
+.btn-overlay:hover {
+    background: rgba(59, 130, 246, 0.95);
+    transform: scale(1.08);
+}
+
+.btn-overlay-text:hover {
+    color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.btn-overlay:active,
+.btn-overlay-text:active {
+    transform: scale(0.92);
+}
+
+/* BARRA INFERIOR BLINDADA (Fija abajo del todo al 100% de la pantalla) */
+.web-control-frame {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 85px;
+    background-color: rgba(30, 41, 59, 0.85);
+    /* Ahora es traslúcida pro */
+    backdrop-filter: blur(8px);
+    /* Efecto cristal de fondo */
+    padding: 15px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+    z-index: 100;
+    opacity: 0;
+    /* Por defecto oculta, la controla el JS */
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Misma transición que el overlay */
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: #475569;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    width: 0%;
+    height: 100%;
+    background-color: #3b82f6;
+    transition: width 0.1s linear;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.time-box {
+    font-family: monospace;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    min-width: 90px;
+}
+
+#time-right {
+    text-align: right;
+}
+
+.buttons-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    /* Permite expandirse en el centro */
+}
+
+/* Estilos de botones estándar de la barra */
+.btn-sm {
+    background-color: #334155;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-sm:hover {
+    background-color: #475569;
+}
+
+.btn-info {
+    background-color: #0284c7;
+}
+
+.btn-info:hover {
+    background-color: #0369a1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.user-active .player-overlay,
+.user-active .web-control-frame {
+    opacity: 1;
+    pointer-events: auto;
+    /* Permite clicar los botones cuando son visibles */
+}

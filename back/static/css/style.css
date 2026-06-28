@@ -1,0 +1,161 @@
+/* ==========================================================================
+   1. VARIABLES Y CONFIGURACIÓN BASE
+   ========================================================================== */
+:root {
+    --bg-main: #0f172a;       /* Azul oscuro profundo */
+    --bg-card: #1e293b;       /* Gris azulado para el contenedor */
+    --text-main: #f8fafc;     /* Blanco roto para no cansar la vista */
+    --text-muted: #94a3b8;    /* Gris para textos secundarios */
+    
+    /* Paleta de colores para botones (Estados y Categorías) */
+    --primary: #3b82f6;       /* Azul - Aleatorio */
+    --secondary: #a855f7;     /* Morado - Personas */
+    --accent: #eab308;        /* Amarillo/Dorado - Favoritos */
+    --dark: #475569;          /* Gris claro - Álbumes */
+    --info: #06b6d4;          /* Cian - Stats */
+    
+    /* Estados del Health Check */
+    --status-online: #22c55e;  /* Verde */
+    --status-offline: #ef4444; /* Rojo */
+    --status-checking: #f59e0b;/* Naranja */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ==========================================================================
+   2. CONTENEDOR PRINCIPAL (DASHBOARD)
+   ========================================================================== */
+.dashboard-container {
+    background-color: var(--bg-card);
+    width: 100%;
+    max-width: 500px;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* ==========================================================================
+   3. INDICADOR DE HEALTH CHECK
+   ========================================================================== */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Clases dinámicas que controlará JavaScript */
+.status-indicator.checking .status-dot {
+    background-color: var(--status-checking);
+    animation: pulse 1.5s infinite ease-in-out;
+}
+.status-indicator.checking { color: var(--status-checking); }
+
+.status-indicator.online .status-dot { background-color: var(--status-online); }
+.status-indicator.online { color: var(--status-online); }
+
+.status-indicator.offline .status-dot { background-color: var(--status-offline); }
+.status-indicator.offline { color: var(--status-offline); }
+
+/* Animation para el estado de carga */
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+/* ==========================================================================
+   4. BOTONES (GRID DE ACCIONES)
+   ========================================================================== */
+.actions-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.1s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0; /* Evita que el SVG se deforme si el texto es largo */
+    transition: transform 0.2s ease;
+}
+
+/* Detalle visual: cuando pases el ratón por el botón, el SVG se moverá ligeramente */
+.btn:hover .icon-svg {
+    transform: scale(1.1);
+}
+
+/* Variaciones de color basadas en las variables */
+.btn-primary   { background-color: var(--primary); }
+.btn-secondary { background-color: var(--secondary); }
+.btn-accent    { background-color: var(--accent); color: #1e293b; } /* Texto oscuro para contraste */
+.btn-dark      { background-color: var(--dark); }
+.btn-info      { background-color: var(--info); }
+
+/* Efectos Hover y Active (Feedback visual al hacer click) */
+.btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
