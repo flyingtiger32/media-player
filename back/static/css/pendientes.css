@@ -1,0 +1,295 @@
+/* Contenedor posicionado arriba a la derecha del visor */
+.options-menu-container {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    z-index: 150;
+    /* Por encima del overlay central */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Mostramos el botón de 3 puntitos usando el mismo hover del sistema activo */
+.user-active .options-menu-container {
+    opacity: 1;
+}
+
+/* El botón redondo de los 3 puntitos */
+.btn-options-trigger {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+    transition: transform 0.1s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.btn-options-trigger svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-options-trigger:hover,
+.btn-options-trigger.active-trigger {
+    background: rgba(59, 130, 246, 0.95);
+    color: white;
+    transform: scale(1.05);
+}
+
+.btn-options-trigger:active {
+    transform: scale(0.92);
+}
+
+/* El panel desplegable hacia abajo */
+.options-dropdown {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform-origin: top right;
+}
+
+/* Botones internos con la misma estética que -15s / +15s */
+.btn-dropdown-item {
+    background: transparent;
+    border: none;
+    color: #f1f5f9;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 16px;
+    min-width: 120px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-dropdown-item:hover {
+    color: #3b82f6;
+    /* Hover azul idéntico */
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: scale(1.03);
+}
+
+.btn-dropdown-item:active {
+    transform: scale(0.95);
+    /* Hundimiento mecánico */
+}
+
+/* Clases útiles para ocultar/mostrar mediante JS */
+.hidden-menu {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95) translateY(-5px);
+}
+
+/* FONTO OSCURECIDO DEL MODAL (OVERLAY) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    /* Fondo más oscurito */
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+    /* Por encima de todo */
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+/* CAJA CENTRAL DEL MODAL */
+.modal-content {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    background: rgba(15, 23, 42, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 1.2rem;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-close-modal:hover {
+    color: #f43f5e;
+}
+
+.modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-body label {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* SELECT REESTILIZADO */
+#modal-select {
+    background: #334155;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    outline: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* CONTENEDOR NUEVA OPCIÓN */
+#new-option-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+#new-option-input {
+    flex: 1;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    outline: none;
+}
+
+/* CAJA DE TAGS SELECCIONADOS */
+.tags-container-label {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.tags-box {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 10px;
+    min-height: 45px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* LOS TAGS (Cromática azul y X interactiva) */
+.tag-item {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.tag-close {
+    cursor: pointer;
+    color: #f1f5f9;
+    font-weight: bold;
+    transition: color 0.1s;
+}
+
+.tag-close:hover {
+    color: #f43f5e;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* CONTENEDOR FIJO PARA TOASTS ABAJO */
+.toast-container {
+    position: fixed;
+    bottom: 110px;
+    /* Queda flotando justo por encima de la barra inferior */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+/* EL TOAST VERDE */
+.toast-message {
+    background: rgba(22, 163, 74, 0.9);
+    /* Verde esmeralda con opacidad pro */
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 0.95rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    text-align: center;
+}
+
+.toast-message.show-toast {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* CLASE DE OCULTADO FÁCIL */
+.hidden-modal {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

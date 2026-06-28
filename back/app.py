@@ -9,7 +9,7 @@ CORS(app)
 DB_PATH = "back/biblioteca.db"
 
 # Tu directorio multimedia externo
-MEDIA_FOLDER = "C:/Users/Marcu/Downloads/"
+MEDIA_FOLDER = "C:/pers/podo"
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".ico", ".webp"}
 VIDEO_EXTS = {".mp4", ".avi", ".mov", ".webm", ".mkv", ".wmv", ".flv", ".heic"}
@@ -20,6 +20,39 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row  # Para poder acceder a las columnas por nombre
     return conn
 
+
+def sincronizar_archivos():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    archivos_insertados = 0
+
+    for filename in get_media_files(MEDIA_FOLDER):
+        filepath = os.path.join(MEDIA_FOLDER, filename)
+
+        _, ext = os.path.splitext(filename)
+        tipo = "image" if ext.lower() in IMAGE_EXTS else "video"
+
+        stat = os.stat(filepath)
+
+        cursor.execute("""
+            INSERT OR IGNORE INTO archivos
+            (filename, filepath, tipo, size_bytes)
+            VALUES (?, ?, ?, ?)
+        """, (
+            filename,
+            filepath,
+            tipo,
+            stat.st_size
+        ))
+
+        if cursor.rowcount > 0:
+            archivos_insertados += 1
+
+    conn.commit()
+    conn.close()
+
+    print(f"✔ Sincronización completada. {archivos_insertados} archivos nuevos.")
 
 @app.route("/api/stats/pendientes")
 def get_pendientes_count():
@@ -82,6 +115,11 @@ def random_player():
     return render_template("random.html")
 
 
+@app.route("/pendientes")
+def pendientes_player():
+    return render_template("pendientes.html")
+
+
 # Endpoint para servir los archivos físicos del disco al navegador
 @app.route("/media/<path:filename>")
 def serve_media(filename):
@@ -122,4 +160,5 @@ def health_check():
 
 
 if __name__ == "__main__":
+    sincronizar_archivos()
     app.run(debug=True, port=5000)

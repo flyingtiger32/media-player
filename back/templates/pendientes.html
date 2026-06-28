@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Aleatorio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/random.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pendientes.css') }}">
+</head>
+
+<body>
+
+    <div class="player-container">
+
+        <div class="media-viewport">
+            <div class="options-menu-container">
+                <button id="btn-options" class="btn-options-trigger" title="Opciones de metadatos">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2"></circle>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <circle cx="12" cy="19" r="2"></circle>
+                    </svg>
+                </button>
+
+                <div id="options-dropdown" class="options-dropdown hidden-menu">
+                    <button class="btn-dropdown-item">⭐ Favorito</button>
+                    <button class="btn-dropdown-item">📁 Álbum</button>
+                    <button class="btn-dropdown-item">👤 Personas</button>
+                </div>
+            </div>
+            <div class="media-wrapper">
+                <img id="web-image" class="hidden" src="" alt="Multimedia">
+                <video id="web-video" class="hidden" autoplay></video>
+
+
+                <div class="player-overlay">
+                    <button id="overlay-restart" class="btn-overlay btn-overlay-sm" title="Reiniciar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                            <line x1="5" y1="19" x2="5" y2="5"></line>
+                        </svg>
+                    </button>
+
+                    <button id="overlay-back-15" class="btn-overlay btn-overlay-text" title="-15 segundos">-15s</button>
+                    <button id="overlay-toggle" class="btn-overlay btn-overlay-lg" title="Reproducir/Pausar">
+                        <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                        <svg id="icon-play" class="hidden" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <button id="overlay-forward-15" class="btn-overlay btn-overlay-text"
+                        title="+15 segundos">+15s</button>
+
+                    <button id="overlay-next-btn" class="btn-overlay btn-overlay-sm" title="Siguiente">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                            <line x1="19" y1="5" x2="19" y2="19"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="web-control-frame">
+            <div class="progress-bar-container" id="progress-container">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="controls-row">
+                <div id="time-left" class="time-box">00:00</div>
+
+                <div class="buttons-group">
+                    <span id="file-counter"
+                        style="color: #94a3b8; font-family: monospace; font-size: 0.95rem; margin-right: 10px;">(0 /
+                        0)</span>
+                    <button id="btn-web-back" class="btn-sm" onclick="window.location.href='/'">🏠 Home</button>
+                    <button id="btn-web-loop" class="btn-sm">🔁 Repetir: OFF</button>
+                    <button id="btn-web-auto" class="btn-sm btn-info">⏸ Auto-skip: ON</button>
+                </div>
+
+                <div class="volume-time-container" style="display: flex; align-items: center; gap: 15px;">
+                    <div id="time-right" class="time-box">00:00</div>
+
+                    <div class="volume-control-wrapper">
+                        <div class="volume-slider-popover">
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8">
+                        </div>
+
+                        <button id="btn-volume-toggle" class="btn-volume" title="Mute/Unmute">
+                            <svg id="icon-vol-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <svg id="icon-vol-mute" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <line x1="23" y1="9" x2="17" y2="15"></line>
+                                <line x1="17" y1="9" x2="23" y2="15"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <button id="btn-fullscreen-toggle" class="btn-fullscreen" title="Pantalla completa">
+                        <svg id="icon-fs-maximize" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                            </path>
+                        </svg>
+                        <svg id="icon-fs-minimize" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="time-right" class="time-box">00:00</div>
+            </div>
+        </div>
+
+    </div>
+    <div id="meta-modal" class="modal-overlay hidden-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Editar Metadatos</h3>
+                <button id="modal-close" class="btn-close-modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <label for="modal-select" id="modal-label">Selecciona una opción:</label>
+                <select id="modal-select">
+                </select>
+
+                <div id="new-option-container" class="hidden">
+                    <input type="text" id="new-option-input" placeholder="Escribe el nuevo nombre...">
+                    <button id="btn-add-new-tag" class="btn-sm btn-info">Añadir</button>
+                </div>
+
+                <div class="tags-container-label">Seleccionados:</div>
+                <div id="tags-box" class="tags-box">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="btn-modal-submit" class="btn-sm btn-info"
+                    style="width: 100%; padding: 12px; font-size: 1rem;">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="{{ url_for('static', filename='js/player.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pendientes.js') }}"></script>
+</body>
+
+</html>
