@@ -5,6 +5,15 @@ const progressFill = document.getElementById('progress-fill');
 const timeLeft = document.getElementById('time-left');
 const timeRight = document.getElementById('time-right');
 
+const btnFullscreenToggle = document.getElementById('btn-fullscreen-toggle');
+const iconFsMaximize = document.getElementById('icon-fs-maximize');
+const iconFsMinimize = document.getElementById('icon-fs-minimize');
+
+const btnVolumeToggle = document.getElementById('btn-volume-toggle');
+const volumeSlider = document.getElementById('volume-slider');
+const iconVolUp = document.getElementById('icon-vol-up');
+const iconVolMute = document.getElementById('icon-vol-mute');
+
 // Botones Inferiores
 const btnAuto = document.getElementById('btn-web-auto');
 const btnLoop = document.getElementById('btn-web-loop');
@@ -33,6 +42,8 @@ let imageProgressInterval = null;
 let imageElapsed = 0;
 const IMAGE_DURATION = 5000; // 5 segundos
 
+let lastVolume = 0.8;
+
 // 3. Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     loadNextMedia();
@@ -52,6 +63,82 @@ function setupEventListeners() {
     // Controles inferiores
     if (btnAuto) btnAuto.addEventListener('click', toggleAutoAdvance);
     if (btnLoop) btnLoop.addEventListener('click', toggleLoop);
+
+    if (btnFullscreenToggle) {
+        btnFullscreenToggle.addEventListener('click', () => {
+            // Buscamos el contenedor máster para meter toda la interfaz a pantalla completa
+            const container = document.documentElement;
+
+            if (!document.fullscreenElement) {
+                // Si no está en full-screen, entra
+                container.requestFullscreen().catch(err => {
+                    console.error(`Error al intentar activar Fullscreen: ${err.message}`);
+                });
+            } else {
+                // Si ya está, sale
+                document.exitFullscreen();
+            }
+        });
+
+        // Escuchamos el cambio de estado nativo del navegador para cambiar el SVG
+        // Esto cubre si el usuario sale pulsando la tecla 'Esc'
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                // Estamos en pantalla completa: mostramos icono de contraer
+                if (iconFsMaximize) iconFsMaximize.style.display = 'none';
+                if (iconFsMinimize) iconFsMinimize.style.setProperty('display', 'block', 'important');
+            } else {
+                // Salimos de pantalla completa: mostramos icono de expandir
+                if (iconFsMaximize) iconFsMaximize.style.setProperty('display', 'block', 'important');
+                if (iconFsMinimize) iconFsMinimize.style.display = 'none';
+            }
+        });
+    }
+
+    if (btnVolumeToggle && volumeSlider) {
+        // Sincronizar volumen inicial del vídeo con el slider de la interfaz
+        videoElement.volume = volumeSlider.value;
+
+        // Evento al arrastrar la barra de volumen
+        volumeSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            videoElement.volume = val;
+
+            if (parseFloat(val) === 0) {
+                updateVolumeIcons(true);
+            } else {
+                lastVolume = val;
+                updateVolumeIcons(false);
+            }
+        });
+
+        // Evento al hacer click directamente en el altavoz (Mute/Unmute)
+        btnVolumeToggle.addEventListener('click', () => {
+            if (videoElement.volume > 0) {
+                // Mutear
+                lastVolume = videoElement.volume;
+                videoElement.volume = 0;
+                volumeSlider.value = 0;
+                updateVolumeIcons(true);
+            } else {
+                // Recuperar sonido anterior
+                videoElement.volume = lastVolume;
+                volumeSlider.value = lastVolume;
+                updateVolumeIcons(false);
+            }
+        });
+    }
+
+    function updateVolumeIcons(isMuted) {
+        if (!iconVolUp || !iconVolMute) return;
+        if (isMuted) {
+            iconVolUp.style.display = 'none';
+            iconVolMute.style.setProperty('display', 'block', 'important');
+        } else {
+            iconVolUp.style.setProperty('display', 'block', 'important');
+            iconVolMute.style.display = 'none';
+        }
+    }
 
     // Eventos del reproductor de vídeo nativo
     if (videoElement) {
@@ -98,6 +185,7 @@ async function loadNextMedia() {
         } else {
             setupVideoControls();
             videoElement.src = currentMedia.url;
+            videoElement.volume = document.getElementById('volume-slider') ? document.getElementById('volume-slider').value : 0.8;
             videoElement.className = '';
             videoElement.play();
         }

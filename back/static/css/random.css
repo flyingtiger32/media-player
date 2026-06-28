@@ -233,3 +233,142 @@ body {
     pointer-events: auto;
     /* Permite clicar los botones cuando son visibles */
 }
+
+.volume-control-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* El botón del icono */
+.btn-volume {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-volume svg {
+    width: 22px;
+    height: 22px;
+}
+
+.btn-volume:hover {
+    color: #3b82f6;
+    /* Cambia al mismo azul al hacer hover */
+}
+
+/* Efecto activo idéntico al de hundimiento del Play */
+.btn-volume:active {
+    transform: scale(0.92);
+}
+
+/* El panel flotante vertical de la barra */
+.volume-slider-popover {
+    position: absolute;
+    bottom: 35px;
+    /* Aparece justo encima del icono */
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    padding: 12px 8px;
+    border-radius: 20px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 110;
+}
+
+/* Mostrar la barra al mantener el ratón encima del conjunto del volumen */
+.volume-control-wrapper:hover .volume-slider-popover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+/* Convertir el slider horizontal nativo en vertical */
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 6px;
+    height: 85px;
+    background: #475569;
+    border-radius: 3px;
+    outline: none;
+    /* Truco para rotar el slider de horizontal a vertical */
+    writing-mode: bt-lr;
+    /* Para IE */
+    -webkit-appearance: slider-vertical;
+    /* Para navegadores basados en Webkit */
+}
+
+/* Estilo de la barra interna de progreso (Webkit) */
+#volume-slider::-webkit-slider-runnable-track {
+    width: 6px;
+    background: #475569;
+    border-radius: 3px;
+}
+
+/* Estilo de la Bolita Blanca (Thumb) */
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    /* Bolita blanca */
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    margin-left: -3px;
+    /* Centrado sobre la barra */
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Botón de pantalla completa sin texto, limpio */
+.btn-fullscreen {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    transition: color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-fullscreen svg {
+    width: 22px;
+    height: 22px;
+}
+
+.btn-fullscreen:hover {
+    color: #3b82f6;
+    /* El mismo azul de acento */
+}
+
+/* Efecto de hundimiento idéntico al resto de la interfaz */
+.btn-fullscreen:active {
+    transform: scale(0.92);
+}
