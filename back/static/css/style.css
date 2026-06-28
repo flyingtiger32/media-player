@@ -2,22 +2,34 @@
    1. VARIABLES Y CONFIGURACIÓN BASE
    ========================================================================== */
 :root {
-    --bg-main: #0f172a;       /* Azul oscuro profundo */
-    --bg-card: #1e293b;       /* Gris azulado para el contenedor */
-    --text-main: #f8fafc;     /* Blanco roto para no cansar la vista */
-    --text-muted: #94a3b8;    /* Gris para textos secundarios */
-    
+    --bg-main: #0f172a;
+    /* Azul oscuro profundo */
+    --bg-card: #1e293b;
+    /* Gris azulado para el contenedor */
+    --text-main: #f8fafc;
+    /* Blanco roto para no cansar la vista */
+    --text-muted: #94a3b8;
+    /* Gris para textos secundarios */
+
     /* Paleta de colores para botones (Estados y Categorías) */
-    --primary: #3b82f6;       /* Azul - Aleatorio */
-    --secondary: #a855f7;     /* Morado - Personas */
-    --accent: #eab308;        /* Amarillo/Dorado - Favoritos */
-    --dark: #475569;          /* Gris claro - Álbumes */
-    --info: #06b6d4;          /* Cian - Stats */
-    
+    --primary: #3b82f6;
+    /* Azul - Aleatorio */
+    --secondary: #a855f7;
+    /* Morado - Personas */
+    --accent: #eab308;
+    /* Amarillo/Dorado - Favoritos */
+    --dark: #475569;
+    /* Gris claro - Álbumes */
+    --info: #06b6d4;
+    /* Cian - Stats */
+
     /* Estados del Health Check */
-    --status-online: #22c55e;  /* Verde */
-    --status-offline: #ef4444; /* Rojo */
-    --status-checking: #f59e0b;/* Naranja */
+    --status-online: #22c55e;
+    /* Verde */
+    --status-offline: #ef4444;
+    /* Rojo */
+    --status-checking: #f59e0b;
+    /* Naranja */
 }
 
 * {
@@ -92,19 +104,43 @@ body {
     background-color: var(--status-checking);
     animation: pulse 1.5s infinite ease-in-out;
 }
-.status-indicator.checking { color: var(--status-checking); }
 
-.status-indicator.online .status-dot { background-color: var(--status-online); }
-.status-indicator.online { color: var(--status-online); }
+.status-indicator.checking {
+    color: var(--status-checking);
+}
 
-.status-indicator.offline .status-dot { background-color: var(--status-offline); }
-.status-indicator.offline { color: var(--status-offline); }
+.status-indicator.online .status-dot {
+    background-color: var(--status-online);
+}
+
+.status-indicator.online {
+    color: var(--status-online);
+}
+
+.status-indicator.offline .status-dot {
+    background-color: var(--status-offline);
+}
+
+.status-indicator.offline {
+    color: var(--status-offline);
+}
 
 /* Animation para el estado de carga */
 @keyframes pulse {
-    0% { transform: scale(0.8); opacity: 0.5; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(0.8); opacity: 0.5; }
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
 }
 
 /* ==========================================================================
@@ -134,7 +170,8 @@ body {
 .icon-svg {
     width: 20px;
     height: 20px;
-    flex-shrink: 0; /* Evita que el SVG se deforme si el texto es largo */
+    flex-shrink: 0;
+    /* Evita que el SVG se deforme si el texto es largo */
     transition: transform 0.2s ease;
 }
 
@@ -144,11 +181,27 @@ body {
 }
 
 /* Variaciones de color basadas en las variables */
-.btn-primary   { background-color: var(--primary); }
-.btn-secondary { background-color: var(--secondary); }
-.btn-accent    { background-color: var(--accent); color: #1e293b; } /* Texto oscuro para contraste */
-.btn-dark      { background-color: var(--dark); }
-.btn-info      { background-color: var(--info); }
+.btn-primary {
+    background-color: var(--primary);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    color: #1e293b;
+}
+
+/* Texto oscuro para contraste */
+.btn-dark {
+    background-color: var(--dark);
+}
+
+.btn-info {
+    background-color: var(--info);
+}
 
 /* Efectos Hover y Active (Feedback visual al hacer click) */
 .btn:hover {
@@ -158,4 +211,13 @@ body {
 
 .btn:active {
     transform: scale(0.98);
+}
+
+#btn-pendientes:hover {
+    background-color: #ea580c !important;
+    /* Un naranja más oscuro al hacer hover */
+}
+
+#btn-pendientes:active {
+    transform: scale(0.96);
 }

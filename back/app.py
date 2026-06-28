@@ -2,22 +2,68 @@ import os
 import random
 from flask import Flask, jsonify, render_template, send_from_directory
 from flask_cors import CORS
+import sqlite3
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
+DB_PATH = "back/biblioteca.db"
 
 # Tu directorio multimedia externo
 MEDIA_FOLDER = "C:/Users/Marcu/Downloads/"
 
-IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.bmp', '.ico', '.webp'}
-VIDEO_EXTS = {'.mp4', '.avi', '.mov', '.webm', '.mkv', '.wmv', '.flv', '.heic'}
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".ico", ".webp"}
+VIDEO_EXTS = {".mp4", ".avi", ".mov", ".webm", ".mkv", ".wmv", ".flv", ".heic"}
+
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # Para poder acceder a las columnas por nombre
+    return conn
+
+
+@app.route("/api/stats/pendientes")
+def get_pendientes_count():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Esta consulta busca archivos que falten en cualquiera de las dos tablas intermedias
+        query = """
+SELECT COUNT(*) as total
+FROM archivos a
+WHERE NOT EXISTS (
+    SELECT 1 FROM archivo_personas ap
+    WHERE ap.archivo_id = a.id
+)
+AND NOT EXISTS (
+    SELECT 1 FROM archivo_albumes aa
+    WHERE aa.archivo_id = a.id
+);
+        """
+
+        cursor.execute(query)
+        result = cursor.fetchone()
+        conn.close()
+
+        total_pendientes = result["total"] if result else 0
+
+        return jsonify({"total_pendientes": total_pendientes})
+
+    except Exception as e:
+        print(f"Error en la base de datos: {e}")
+        # Si da error porque las tablas no existen todavía, devolvemos 0 temporalmente
+        return jsonify({"total_pendientes": 0, "error": str(e)}), 500
 
 
 # Obtener archivos válidos e inicializar la lista mezclada
 def get_media_files(folder):
     if not os.path.exists(folder):
         return []
-    return [f for f in os.listdir(folder) if os.path.splitext(f)[1].lower() in IMAGE_EXTS.union(VIDEO_EXTS)]
+    return [
+        f
+        for f in os.listdir(folder)
+        if os.path.splitext(f)[1].lower() in IMAGE_EXTS.union(VIDEO_EXTS)
+    ]
 
 
 playlist = get_media_files(MEDIA_FOLDER)
@@ -25,25 +71,25 @@ random.shuffle(playlist)
 current_index = 0
 
 
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
 # Nueva ruta para renderizar la página del reproductor
-@app.route('/random')
+@app.route("/random")
 def random_player():
-    return render_template('random.html')
+    return render_template("random.html")
 
 
 # Endpoint para servir los archivos físicos del disco al navegador
-@app.route('/media/<path:filename>')
+@app.route("/media/<path:filename>")
 def serve_media(filename):
     return send_from_directory(MEDIA_FOLDER, filename)
 
 
 # Endpoint que solicita el JS para saber cuál es el siguiente archivo
-@app.route('/api/next', methods=['GET'])
+@app.route("/api/next", methods=["GET"])
 def get_next_media():
     global current_index, playlist
 
@@ -63,17 +109,17 @@ def get_next_media():
         "filename": filename,
         "type": media_type,
         "index": current_index + 1,
-        "total": len(playlist)
+        "total": len(playlist),
     }
 
     current_index += 1
     return jsonify(data)
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "healthy", "total_files": len(playlist)}), 200
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, port=5000)
