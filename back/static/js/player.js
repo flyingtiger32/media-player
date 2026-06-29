@@ -1,4 +1,9 @@
 // 1. Captura de elementos del DOM
+
+const NEXT_ENDPOINT = window.NEXT_ENDPOINT;
+let currentMediaId = null;
+
+
 const imgElement = document.getElementById('web-image');
 const videoElement = document.getElementById('web-video');
 const progressFill = document.getElementById('progress-fill');
@@ -161,8 +166,9 @@ async function loadNextMedia() {
     videoElement.src = "";
 
     try {
-        const response = await fetch('http://127.0.0.1:5000/api/next');
+        const response = await fetch(NEXT_ENDPOINT);
         currentMedia = await response.json();
+        currentMediaId = currentMedia.id;
 
         if (currentMedia.error) {
             alert(currentMedia.error);
