@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Vault - Detalle de Persona</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/persona_detalle.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header-detail">
+            <a href="/personas" class="btn-back">➔ Volver al catálogo</a>
+            <div class="header-main-title">
+                <h1 id="persona-title">Cargando...</h1>
+
+                <div class="mode-switch-container">
+                    <button id="tab-galeria" class="btn-switch-tab active">Todas las fotos</button>
+                    <button id="tab-albumes" class="btn-switch-tab">Álbumes asociados</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="media-grid" class="media-grid">
+            <div class="status-msg">Cargando archivos de la persona...</div>
+        </div>
+
+        <div id="pagination" class="pagination-container">
+            <button id="btn-prev" class="btn-page" href="#tab-galeria">Previo</button>
+            <div class="page-indicator">
+                Página <input type="number" id="page-input" class="page-input" value="1" min="1"> de <span
+                    id="total-pages">1</span>
+            </div>
+            <button id="btn-next" class="btn-page" href="#tab-galeria">Siguiente</button>
+        </div>
+
+    </div>
+    <script src="{{ url_for('static', filename='js/persona_detalle.js') }}"></script>
+
+</body>
+
+</html>

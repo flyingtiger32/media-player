@@ -1,0 +1,258 @@
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-indigo: #818cf8;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1300px;
+            /* Un poco más ancho para albergar las 5 columnas cómodamente */
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* --- ENCABEZADO VOLVER + NOMBRE --- */
+        .header-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .btn-back {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+            width: fit-content;
+        }
+
+        .btn-back:hover {
+            color: var(--accent-blue);
+        }
+
+        .header-main-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-main-title h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- SWITCH / SELECTOR DE MODOS COHERENTE --- */
+        .mode-switch-container {
+            display: flex;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 30px;
+            position: relative;
+        }
+
+        .btn-switch-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .btn-switch-tab.active {
+            color: var(--bg-main);
+            background-color: var(--accent-blue);
+            /* Protagonismo limpio sin saturar */
+        }
+
+        /* --- REJILLA 5 COLUMNAS x 6 FILAS (MÁX 30 ITEMS) --- */
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            /* 5 Columnas estrictas */
+            gap: 16px;
+            min-height: 400px;
+        }
+
+        /* Responsive intermedio */
+        @media (max-width: 1024px) {
+            .media-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .media-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .media-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ITEM DE LA GALERÍA (Muesca redondeada suave) */
+        .media-item-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            /* Redondeado menos agresivo premium */
+            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            /* Cuadradas perfectas */
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+        }
+
+        .media-item-card:hover {
+            transform: scale(1.03);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .media-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Distintivo si es vídeo */
+        .video-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            padding: 4px 6px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* CARDS PARA MODO ÁLBUMES */
+        .album-item-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            aspect-ratio: 1.4 / 1;
+            /* Formato más rectangular para carpetas */
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .album-item-card:hover {
+            border-color: var(--accent-indigo);
+            transform: translateY(-3px);
+        }
+
+        .album-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .album-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .album-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* --- PAGINACIÓN --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .btn-page {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: var(--accent-blue);
+            color: var(--bg-main);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .page-input {
+            width: 45px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 4px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-muted);
+            padding: 60px;
+            font-size: 1.1rem;
+        }

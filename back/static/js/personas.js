@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ultimaVez = p.ultima_aparicion ? `Hace ${p.ultima_aparicion}` : 'Desconocida';
 
             // Bloque condicional por si es portada de su catálogo
-            const coverHTML = p.es_portada ? `<div class="persona-cover-badge">⭐ Portada</div>` : '';
+            const coverHTML = p.es_portada ? `<div class="persona-cover-badge">⭐ Top tier</div>` : '';
 
             card.innerHTML = `
                     <img class="persona-avatar" src="${avatarImg}" alt="${p.nombre}">

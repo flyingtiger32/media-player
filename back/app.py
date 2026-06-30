@@ -371,6 +371,8 @@ def marcar_favorito():
     except Exception as e:
         print(f"Error en favoritos: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+
 
 
 @app.route("/api/albumes")
@@ -402,6 +404,11 @@ def get_all_personas():
         return jsonify(lista)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/personas/<int:persona_id>')
+def vista_detalle_persona(persona_id):
+    # Simplemente renderiza la plantilla y le pasa la variable persona_id al HTML
+    return render_template('persona_detalle.html', persona_id=persona_id)
 
 
 @app.route("/api/pendientes/actuales")
@@ -524,7 +531,7 @@ def get_catalogo_personas():
                     # Si es una imagen ordinaria, usamos tu endpoint /media/ de forma directa
                     avatar_url = f"/media/{filename}"
 
-            es_portada = True if fila["total_archivos"] > 10 else False 
+            es_portada = True if fila["total_archivos"] > 100 else False 
 
             lista_personas.append({
                 "id": fila["id"],
@@ -544,7 +551,115 @@ def get_catalogo_personas():
     except Exception as e:
         print(f"Error crítico en la API de personas: {e}")
         return jsonify({"personas": [], "total_pages": 1, "current_page": 1, "error": str(e)}), 500
+    
+@app.route('/api/personas/<int:persona_id>')
+def get_archivos_persona(persona_id):
+    try:
+        page = request.args.get('page', default=1, type=int)
+        limit = request.args.get('limit', default=30, type=int) # Ajustado al formato 5x6 (30 por página)
+        
+        if page < 1: page = 1
+        if limit < 1: limit = 30
+        offset = (page - 1) * limit
 
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Validar persona y sacar su nombre
+        cursor.execute("SELECT nombre FROM personas WHERE id = ?;", (persona_id,))
+        persona = cursor.fetchone()
+        if not persona:
+            conn.close()
+            return jsonify({"error": "Persona no encontrada"}), 404
+        nombre_persona = persona['nombre']
+
+        # 2. Paginación: Contar total de archivos de esta persona
+        cursor.execute("SELECT COUNT(*) as total FROM archivo_personas WHERE persona_id = ?;", (persona_id,))
+        total_records = cursor.fetchone()['total']
+        total_pages = math.ceil(total_records / limit) if total_records > 0 else 1
+
+        # 3. 🔥 NUEVO: Obtener TODOS los álbumes únicos en los que aparece esta persona (Sin importar la página)
+        # Esto nos permite pintar las carpetas del Tab B completas sin perder datos por el LIMIT
+        albumes_globales_query = """
+            SELECT DISTINCT al.id, al.nombre
+            FROM albumes al
+            JOIN archivo_albumes aa ON al.id = aa.album_id
+            JOIN archivo_personas ap ON aa.archivo_id = ap.archivo_id
+            WHERE ap.persona_id = ?;
+        """
+        cursor.execute(albumes_globales_query, (persona_id,))
+        filas_albumes = cursor.fetchall()
+        lista_albumes_asociados = [{"id": f["id"], "nombre": f["nombre"]} for f in filas_albumes]
+
+        # 4. Traer los archivos paginados del Grid
+        main_query = """
+            SELECT a.id, a.filename, a.tipo -- He corregido 'tipo' por 'type' según tu tabla de antes
+            FROM archivos a
+            JOIN archivo_personas ap ON a.id = ap.archivo_id
+            WHERE ap.persona_id = ?
+            ORDER BY a.id DESC
+            LIMIT ? OFFSET ?;
+        """
+        cursor.execute(main_query, (persona_id, limit, offset))
+        filas_archivos = cursor.fetchall()
+
+        # 5. Construir los archivos inyectando sus álbumes internos
+        lista_archivos = []
+        for fila in filas_archivos:
+            archivo_id = fila["id"]
+            filename = fila["filename"]
+            tipo = fila["tipo"]
+            
+            # Subconsulta para saber en qué álbumes está ESTE archivo concreto (puede ser más de uno)
+            cursor.execute("""
+                SELECT al.id, al.nombre 
+                FROM albumes al
+                JOIN archivo_albumes aa ON al.id = aa.album_id
+                WHERE aa.archivo_id = ?;
+            """, (archivo_id,))
+            filas_alb_archivo = cursor.fetchall()
+            albumes_del_archivo = [{"id": fa["id"], "nombre": fa["nombre"]} for fa in filas_alb_archivo]
+
+            # Procesamiento de miniaturas (On-demand)
+            if tipo == "video":
+                nombre_miniatura = f"thumb_{filename}.jpg"
+                ruta_miniatura_fisica = os.path.join(AVATAR_CACHE_FOLDER, nombre_miniatura)
+                if not os.path.exists(ruta_miniatura_fisica):
+                    ruta_video_real = os.path.join(MEDIA_FOLDER, filename)
+                    cap = cv2.VideoCapture(ruta_video_real)
+                    success, frame = cap.read()
+                    if success:
+                        cv2.imwrite(ruta_miniatura_fisica, frame)
+                    cap.release()
+                thumb_url = f"/media/cache_avatars/{nombre_miniatura}"
+            else:
+                thumb_url = f"/media/{filename}"
+
+            lista_archivos.append({
+                "id": archivo_id,
+                "filename": filename,
+                "tipo": tipo,
+                "media_url": f"/media/{filename}",
+                "thumb_url": thumb_url,
+                "albumes": albumes_del_archivo # 📦 ¡Tu objeto indexado! Ideal para filtros reactivos o playlists
+            })
+
+        conn.close()
+
+        # 6. Respuesta JSON unificada impecable
+        return jsonify({
+            "persona_id": persona_id,
+            "persona_nombre": nombre_persona,
+            "total_archivos": total_records,
+            "total_pages": total_pages,
+            "current_page": page,
+            "albumes_asociados": lista_albumes_asociados, # 📁 Lista global para el switch sin llamadas extra
+            "archivos": lista_archivos
+        })
+
+    except Exception as e:
+        print(f"Error en API unificada: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     sincronizar_archivos()
