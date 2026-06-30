@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. FUNCIONES DEL MODAL ASÍNCRONO ---
     function openModal(mode) {
         currentMode = mode;
-        selectedTags = [];
+        selectedTags = []; // Limpiamos el array temporal
         tagsBox.innerHTML = "";
         newOptionInput.value = "";
 
@@ -74,11 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         modalLabel.style.display = "block";
         newOptionContainer.classList.add('hidden');
 
+        // Pausar reproducción si el archivo es un vídeo en marcha
         if (typeof isPaused !== 'undefined' && !isPaused) {
             const playPauseBtn = document.getElementById('overlay-toggle');
             if (playPauseBtn) playPauseBtn.click();
         }
 
+        // Configurar títulos de las cabeceras
         if (mode === "albumes") {
             modalTitle.textContent = "Asignar Álbumes";
             modalLabel.textContent = "Selecciona uno o varios álbumes:";
@@ -87,17 +89,35 @@ document.addEventListener('DOMContentLoaded', () => {
             modalLabel.textContent = "Selecciona una o varias personas:";
         }
 
-        const endpoint = mode === "albumes" ? '/api/albumes' : '/api/personas';
+        if (typeof currentMediaId === 'undefined' || !currentMediaId) {
+            console.error("No hay un ID de archivo activo.");
+            return;
+        }
 
-        fetch(endpoint)
-            .then(res => res.json())
-            .then(serverData => {
-                // CORREGIDO: Pasamos los datos del servidor de forma estricta
-                renderSelectOptions(serverData);
+        // Definimos las dos URLs que necesitamos consultar
+        const urlGlobales = mode === "albumes" ? '/api/albumes' : '/api/personas';
+        const urlActuales = `/api/pendientes/actuales?archivo_id=${currentMediaId}&tipo=${mode}`;
+
+        // Lanzamos ambas peticiones al mismo tiempo
+        Promise.all([
+            fetch(urlGlobales).then(res => res.json()),
+            fetch(urlActuales).then(res => res.json())
+        ])
+            .then(([opcionesGlobales, opcionesActuales]) => {
+                // 1. Cargamos las que ya tiene asignadas en nuestro array de trabajo
+                selectedTags = Array.isArray(opcionesActuales) ? opcionesActuales : [];
+
+                // 2. Pintamos los tags en el tags-box de forma dinámica
+                renderTags();
+
+                // 3. Renderizamos el select filtrando lo que ya está en selectedTags
+                renderSelectOptions(opcionesGlobales);
+
+                // 4. Mostramos el modal
                 modal.classList.remove('hidden-modal');
             })
             .catch(err => {
-                console.error("Error al traer opciones del servidor, usando array vacío:", err);
+                console.error("Error en la carga combinada del modal:", err);
                 renderSelectOptions([]);
                 modal.classList.remove('hidden-modal');
             });

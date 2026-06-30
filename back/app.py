@@ -351,8 +351,9 @@ def marcar_favorito():
     except Exception as e:
         print(f"Error en favoritos: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-    
-@app.route('/api/albumes')
+
+
+@app.route("/api/albumes")
 def get_all_albumes():
     try:
         conn = get_db_connection()
@@ -360,14 +361,15 @@ def get_all_albumes():
         cursor.execute("SELECT nombre FROM albumes ORDER BY nombre ASC;")
         filas = cursor.fetchall()
         conn.close()
-        
+
         # Extraemos solo el campo 'nombre' en una lista limpia de strings
-        lista = [fila['nombre'] for fila in filas]
+        lista = [fila["nombre"] for fila in filas]
         return jsonify(lista)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/personas')
+
+@app.route("/api/personas")
 def get_all_personas():
     try:
         conn = get_db_connection()
@@ -375,11 +377,51 @@ def get_all_personas():
         cursor.execute("SELECT nombre FROM personas ORDER BY nombre ASC;")
         filas = cursor.fetchall()
         conn.close()
-        
-        lista = [fila['nombre'] for fila in filas]
+
+        lista = [fila["nombre"] for fila in filas]
         return jsonify(lista)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/pendientes/actuales")
+def get_metadatos_actuales():
+    try:
+        archivo_id = request.args.get("archivo_id")
+        tipo = request.args.get("tipo")  # "albumes" o "personas"
+
+        if not archivo_id or not tipo:
+            return jsonify([]), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if tipo == "albumes":
+            query = """
+                SELECT nom.nombre 
+                FROM albumes nom
+                JOIN archivo_albumes inter ON nom.id = inter.album_id
+                WHERE inter.archivo_id = ?;
+            """
+        else:
+            query = """
+                SELECT nom.nombre 
+                FROM personas nom
+                JOIN archivo_personas inter ON nom.id = inter.persona_id
+                WHERE inter.archivo_id = ?;
+            """
+
+        cursor.execute(query, (archivo_id,))
+        filas = cursor.fetchall()
+        conn.close()
+
+        # Extraemos los nombres en una lista limpia de strings
+        actuales = [fila["nombre"] for fila in filas]
+        return jsonify(actuales)
+
+    except Exception as e:
+        print(f"Error al obtener metadatos actuales: {e}")
+        return jsonify([]), 500
 
 
 if __name__ == "__main__":
