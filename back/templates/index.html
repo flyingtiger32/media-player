@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Media Vault - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 
 <body>
@@ -33,18 +34,19 @@
                     Reproducir Aleatoriamente
                 </button>
             </a>
+            <a href="favoritos" style="text-decoration: none;">
+                <button id="btn-favorites" class="btn btn-accent">
+                    <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                        </polygon>
+                    </svg>
+                    Favoritos
+                </button>
+            </a>
 
-            <button id="btn-favorites" class="btn btn-accent">
-                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                    </polygon>
-                </svg>
-                Favoritos
-            </button>
-
-            <button id="btn-albums" class="btn btn-dark">
+            <button id="btn-trigger-nav-modal" class="btn btn-dark">
                 <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -78,7 +80,32 @@
             </div>
         </section>
     </main>
+    <div id="nav-modal" class="modal-overlay hidden-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Explorar Catálogo</h3>
+                <button id="nav-modal-close" class="btn-close-modal">&times;</button>
+            </div>
 
+            <div class="modal-body" style="padding: 30px 20px; gap: 16px;">
+                <p style="color: #94a3b8; text-align: center; margin-top: 0; margin-bottom: 8px; font-size: 0.95rem;">
+                    ¿Qué sección deseas gestionar o visualizar ahora?
+                </p>
+
+                <div class="nav-modal-grid">
+                    <a href="/albumes" class="btn-nav-destination btn-nav-albums">
+                        <span class="nav-icon">📁</span>
+                        <span class="nav-text">Ver Álbumes</span>
+                    </a>
+
+                    <a href="/personas" class="btn-nav-destination btn-nav-personas">
+                        <span class="nav-icon">👤</span>
+                        <span class="nav-text">Ver Personas</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>

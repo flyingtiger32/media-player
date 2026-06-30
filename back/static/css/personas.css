@@ -1,0 +1,266 @@
+:root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-input: #334155;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-indigo: #818cf8;
+    --border-color: rgba(255, 255, 255, 0.08);
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- ENCABEZADO Y BUSCADOR ANIMADO --- */
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+    position: relative;
+}
+
+.header-section h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+    height: 40px;
+}
+
+/* Caja de entrada oculta/colapsada por defecto */
+.search-input {
+    width: 0;
+    opacity: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 0;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.95rem;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s;
+    pointer-events: none;
+}
+
+/* Cuando está activa, se expande hacia la izquierda */
+.search-wrapper.active .search-input {
+    width: 240px;
+    opacity: 1;
+    padding: 8px 16px 8px 40px;
+    /* Margen izquierdo para no tapar la lupa */
+    pointer-events: auto;
+}
+
+.btn-search-trigger {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.2s, background-color 0.2s;
+    position: absolute;
+    right: 0;
+    z-index: 2;
+}
+
+.btn-search-trigger:hover,
+.search-wrapper.active .btn-search-trigger {
+    color: var(--accent-blue);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-search-trigger svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* --- GRID DE CARDS --- */
+.personas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 20px;
+    min-height: 300px;
+    /* Evita colapsos bruscos al paginar */
+}
+
+@media (max-width: 500px) {
+    .personas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ESTRUCTURA EXACTA DE TU DISEÑO */
+.persona-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+    cursor: pointer;
+}
+
+.persona-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.persona-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.persona-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-grow: 1;
+}
+
+.persona-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.persona-stat {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.persona-cover-badge {
+    font-size: 0.85rem;
+    color: #eab308;
+    /* Dorado */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.arrow-link {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    position: absolute;
+    right: 16px;
+    transition: transform 0.2s;
+}
+
+.persona-card:hover .arrow-link {
+    transform: translateX(4px);
+    color: var(--accent-blue);
+}
+
+/* --- SISTEMA DE PAGINACIÓN --- */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.btn-page {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-page:hover:not(:disabled) {
+    background: var(--accent-blue);
+    color: var(--bg-main);
+}
+
+.btn-page:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-indicator {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.page-input {
+    width: 40px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 4px 6px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+}
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Mensaje de carga o sin resultados */
+.status-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px;
+    font-size: 1.1rem;
+}

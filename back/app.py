@@ -3,6 +3,10 @@ import random
 from flask import Flask, jsonify, render_template, send_from_directory, request
 from flask_cors import CORS
 import sqlite3
+import math
+import cv2
+
+
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
@@ -10,6 +14,9 @@ DB_PATH = "back/biblioteca.db"
 
 # Tu directorio multimedia externo
 MEDIA_FOLDER = "C:/pers/podo"
+
+AVATAR_CACHE_FOLDER = os.path.join(MEDIA_FOLDER, 'cache_avatars')
+os.makedirs(AVATAR_CACHE_FOLDER, exist_ok=True)
 
 playlist_pendientes = []
 indice_pendientes = 0
@@ -21,7 +28,7 @@ VIDEO_EXTS = {".mp4", ".avi", ".mov", ".webm", ".mkv", ".wmv", ".flv", ".heic"}
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Para poder acceder a las columnas por nombre
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -175,6 +182,17 @@ def pendientes_player():
     cargar_playlist_pendientes()
     return render_template("pendientes.html")
 
+@app.route("/personas")
+def personas():
+    return render_template("personas.html")
+
+@app.route("/albumes")
+def albumes():
+    return render_template("albumes.html")
+
+@app.route("/favoritos")
+def favoritos():
+    return render_template("favoritos.html")
 
 # Endpoint para servir los archivos físicos del disco al navegador
 @app.route("/media/<path:filename>")
@@ -213,6 +231,8 @@ def get_next_media():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "healthy", "total_files": len(playlist)}), 200
+
+@app.route
 
 
 @app.route("/api/pendientes/next")
@@ -422,6 +442,108 @@ def get_metadatos_actuales():
     except Exception as e:
         print(f"Error al obtener metadatos actuales: {e}")
         return jsonify([]), 500
+    
+@app.route('/api/personas2')
+def get_catalogo_personas():
+    try:
+        page = request.args.get('page', default=1, type=int)
+        limit = request.args.get('limit', default=6, type=int)
+        search_query = request.args.get('q', default='', type=str).strip()
+
+        if page < 1: page = 1
+        if limit < 1: limit = 6
+        offset = (page - 1) * limit
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Contar el total para la paginación
+        count_query = "SELECT COUNT(*) as total FROM personas WHERE nombre LIKE ?;"
+        cursor.execute(count_query, (f"%{search_query}%",))
+        total_records = cursor.fetchone()['total']
+        total_pages = math.ceil(total_records / limit) if total_records > 0 else 1
+
+        # 2. SQL: Traemos el 'filename' y el 'type' del último archivo de cada persona
+        main_query = """
+            SELECT 
+                p.id,
+                p.nombre,
+                COUNT(ap.archivo_id) as total_archivos,
+                (
+                    SELECT a.filename 
+                    FROM archivo_personas ap_sub
+                    JOIN archivos a ON ap_sub.archivo_id = a.id
+                    WHERE ap_sub.persona_id = p.id
+                    ORDER BY a.id DESC LIMIT 1
+                ) as ultimo_filename,
+                (
+                    SELECT a.tipo 
+                    FROM archivo_personas ap_sub
+                    JOIN archivos a ON ap_sub.archivo_id = a.id
+                    WHERE ap_sub.persona_id = p.id
+                    ORDER BY a.id DESC LIMIT 1
+                ) as ultimo_tipo
+            FROM personas p
+            LEFT JOIN archivo_personas ap ON p.id = ap.persona_id
+            WHERE p.nombre LIKE ?
+            GROUP BY p.id
+            ORDER BY total_archivos DESC, p.nombre ASC
+            LIMIT ? OFFSET ?;
+        """
+        
+        cursor.execute(main_query, (f"%{search_query}%", limit, offset))
+        filas = cursor.fetchall()
+        conn.close()
+
+        lista_personas = []
+        for fila in filas:
+            filename = fila["ultimo_filename"]
+            tipo = fila["ultimo_tipo"]
+            avatar_url = None
+
+            if filename:
+                if tipo == "video":
+                    # --- LÓGICA DE EXTRACCIÓN DEL FOTOGRAMA ---
+                    nombre_miniatura = f"thumb_{filename}.jpg"
+                    ruta_miniatura_fisica = os.path.join(AVATAR_CACHE_FOLDER, nombre_miniatura)
+                    
+                    # Si la miniatura no se ha generado antes, la creamos ahora
+                    if not os.path.exists(ruta_miniatura_fisica):
+                        ruta_video_real = os.path.join(MEDIA_FOLDER, filename)
+                        
+                        cap = cv2.VideoCapture(ruta_video_real)
+                        success, frame = cap.read() # Lee el primer fotograma
+                        if success:
+                            # Guardamos el fotograma como un archivo JPG físico
+                            cv2.imwrite(ruta_miniatura_fisica, frame)
+                        cap.release()
+                    
+                    # La URL del avatar apuntará a la miniatura en la caché
+                    avatar_url = f"/media/cache_avatars/{nombre_miniatura}"
+                else:
+                    # Si es una imagen ordinaria, usamos tu endpoint /media/ de forma directa
+                    avatar_url = f"/media/{filename}"
+
+            es_portada = True if fila["total_archivos"] > 10 else False 
+
+            lista_personas.append({
+                "id": fila["id"],
+                "nombre": fila["nombre"],
+                "total_archivos": fila["total_archivos"],
+                "ultima_aparicion": "4 días" if fila['total_archivos'] > 0 else None,
+                "es_portada": es_portada,
+                "avatar_url": avatar_url
+            })
+
+        return jsonify({
+            "personas": lista_personas,
+            "total_pages": total_pages,
+            "current_page": page
+        })
+
+    except Exception as e:
+        print(f"Error crítico en la API de personas: {e}")
+        return jsonify({"personas": [], "total_pages": 1, "current_page": 1, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

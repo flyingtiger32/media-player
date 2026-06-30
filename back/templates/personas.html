@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Vault - Personas</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/personas.css') }}">
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-section">
+        <h1>Personas</h1>
+        
+        <div id="search-wrapper" class="search-wrapper">
+            <button id="btn-search" class="btn-search-trigger" title="Buscar persona">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <input type="text" id="search-input" class="search-input" placeholder="Escribe para buscar...">
+        </div>
+    </div>
+
+    <div id="personas-grid" class="personas-grid">
+        <div class="status-msg">Cargando catálogo...</div>
+    </div>
+
+    <div class="pagination-container">
+        <button id="btn-prev" class="btn-page" disabled>Previo</button>
+        
+        <div class="page-indicator">
+            Página <input type="number" id="page-input" class="page-input" value="1" min="1"> de <span id="total-pages">1</span>
+        </div>
+        
+        <button id="btn-next" class="btn-page" disabled>Siguiente</button>
+    </div>
+
+</div>
+
+    <script src="{{ url_for('static', filename='js/personas.js') }}"></script>
+
+</body>
+</html>

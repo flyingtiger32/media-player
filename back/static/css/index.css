@@ -1,0 +1,134 @@
+/* CONTENEDOR DE BOTONES EN PARALELO */
+.nav-modal-grid {
+    display: block;
+    /* WeasyPrint/Compatibilidad limpia, simulamos espacio con margins */
+}
+
+/* BOTÓN BASE DE DESTINO */
+.btn-nav-destination {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-nav-destination:last-child {
+    margin-bottom: 0;
+}
+
+.btn-nav-destination:hover {
+    transform: translateY(-2px);
+}
+
+/* COLOR ESTRATÉGICO ÁLBUMES (Azul Eléctrico Atolón) */
+.btn-nav-albums {
+    background: rgba(14, 165, 233, 0.15);
+    border: 1px solid rgba(14, 165, 233, 0.4);
+    color: #38bdf8;
+}
+
+.btn-nav-albums:hover {
+    background: rgba(14, 165, 233, 0.25);
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+}
+
+/* COLOR ESTRATÉGICO PERSONAS (Índigo Eléctrico) */
+.btn-nav-personas {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #818cf8;
+}
+
+.btn-nav-personas:hover {
+    background: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+/* ICONOS Y TEXTO INTERNO */
+.nav-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.nav-text {
+    vertical-align: middle;
+}
+
+.hidden-modal {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    /* ⚡ Evita que el navegador le reserve sitio en la pantalla */
+}
+
+.modal-overlay {
+    position: fixed;
+    /* ⚡ Crucial: lo saca por completo del flujo Flexbox del body */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    /* Fondo oscuro premium */
+    backdrop-filter: blur(8px);
+    /* Efecto difuminado iOS style */
+
+    /* Centrado interno del recuadro del modal */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+    /* Por encima de cualquier dashboard o menú */
+    opacity: 1;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.2s;
+    visibility: visible;
+}
+
+.modal-content {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    background: rgba(15, 23, 42, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 1.2rem;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.btn-close-modal:hover {
+    color: #f43f5e;
+}
