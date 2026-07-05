@@ -550,6 +550,47 @@ def get_catalogo_personas():
         print(f"Error crítico en la API de personas: {e}")
         return jsonify({"personas": [], "total_pages": 1, "current_page": 1, "error": str(e)}), 500
     
+
+@app.route('/api/personas/<int:persona_id>/desasociar/<int:archivo_id>', methods=['DELETE'])
+def desasociar_archivo_persona(persona_id, archivo_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Ejecutamos el DELETE en la tabla intermedia
+        # Esto rompe el vínculo sin borrar el archivo físico ni a la persona
+        cursor.execute("""
+            DELETE FROM archivo_personas 
+            WHERE persona_id = ? AND archivo_id = ?;
+        """, (persona_id, archivo_id))
+
+        # 2. Guardamos los cambios
+        conn.commit()
+        
+        # Comprobamos si realmente se eliminó alguna fila
+        filas_afectadas = cursor.rowcount
+        conn.close()
+
+        if filas_afectadas == 0:
+            return jsonify({
+                "status": "warning",
+                "message": "No se encontró la vinculación especificada."
+            }), 404
+
+        # 3. Respuesta de éxito limpia para el frontend
+        return jsonify({
+            "status": "success",
+            "message": f"Archivo {archivo_id} desasociado correctamente de la persona {persona_id}."
+        }), 200
+
+    except Exception as e:
+        print(f"Error en la API de desasociación: {e}")
+        return jsonify({
+            "status": "error", 
+            "message": str(e)
+        }), 500
+    
+
 @app.route('/api/personas/<int:persona_id>')
 def get_archivos_persona(persona_id):
     try:
