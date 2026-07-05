@@ -38,6 +38,16 @@
         </div>
 
     </div>
+    <div id="confirm-modal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 class="modal-title">¿Desasociar archivo?</h3>
+        <p class="modal-text">Este archivo dejará de estar vinculado a este perfil, pero no se borrará del almacenamiento físico.</p>
+        <div class="modal-actions-center">
+            <button id="modal-btn-confirm" class="btn-modal btn-modal-confirm">Confirmar desasociación</button>
+            <button id="modal-btn-cancel" class="btn-modal btn-modal-cancel">Cancelar</button>
+        </div>
+    </div>
+</div>
     <script src="{{ url_for('static', filename='js/persona_detalle.js') }}"></script>
 
 </body>

@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        personas.forEach(p => {
+        personas.forEach((p, index) => {
             // p.id, p.nombre, p.total_archivos, p.ultima_aparicion, p.es_portada, p.avatar_url
             const card = document.createElement('div');
             card.className = "persona-card";
@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img class="persona-avatar" src="${avatarImg}" alt="${p.nombre}">
                     <div class="persona-info">
                         <h2 class="persona-name">${p.nombre}</h2>
+                        <div class="persona-stat">#${(index+1)}</div>
                         <div class="persona-stat">📷 ${p.total_archivos} fotografías</div>
                         <div class="persona-stat">🕒 Última aparición: ${ultimaVez}</div>
                         ${coverHTML}

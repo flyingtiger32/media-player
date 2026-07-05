@@ -256,3 +256,182 @@
             padding: 60px;
             font-size: 1.1rem;
         }
+
+        /* --- HOVER OVERLAY GENERAL --- */
+        .media-actions-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(transparent, rgba(15, 23, 42, 0.95));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .media-item-card:hover .media-actions-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- BOTONES BASE DE LA CAPA --- */
+        .btn-overlay-action {
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.1s, filter 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-overlay-action:hover {
+            transform: scale(1.08);
+        }
+
+        /* 🌟 Botón de Favorito Amarillo */
+        .btn-fav-yellow {
+            background-color: #fbbf24;
+            /* Amarillo brillante */
+        }
+
+        .btn-fav-yellow:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-fav-yellow svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            /* Por defecto solo contorno */
+            stroke: #ffffff;
+            /* SVG Blanco */
+            stroke-width: 2;
+            stroke-linejoin: round;
+        }
+
+        /* 🌟 Estado Activo (Ya es favorito) -> Botón más oscuro, estrella rellena */
+        .btn-fav-yellow.is-fav {
+            background-color: #b45309;
+            /* Amarillo oscuro / ocre */
+        }
+
+        .btn-fav-yellow.is-fav svg {
+            fill: #ffffff;
+            /* Estrella rellenada de blanco */
+        }
+
+        /* ❌ Botón Desasociar Rojo Completo */
+        .btn-detach-red {
+            background-color: #ef4444;
+            color: #ffffff;
+            padding: 0 10px;
+            width: auto;
+            /* Para que quepa el texto de forma holgada */
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-detach-red:hover {
+            background-color: #dc2626;
+        }
+
+        /* --- 🛡️ MODAL DE CONFIRMACIÓN INTEGRADO --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            margin: 0 0 12px 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .modal-text {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+        }
+
+        /* Botones del modal centrados */
+        .modal-actions-center {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-modal-confirm {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-modal-confirm:hover {
+            background: #dc2626;
+        }
+
+        .btn-modal-cancel {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #475569;
+        }

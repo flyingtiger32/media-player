@@ -5,7 +5,7 @@ from flask_cors import CORS
 import sqlite3
 import math
 import cv2
-
+from datetime import datetime
 
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -231,8 +231,6 @@ def get_next_media():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "healthy", "total_files": len(playlist)}), 200
-
-@app.route
 
 
 @app.route("/api/pendientes/next")
@@ -593,9 +591,10 @@ def get_archivos_persona(persona_id):
 
         # 4. Traer los archivos paginados del Grid
         main_query = """
-            SELECT a.id, a.filename, a.tipo -- He corregido 'tipo' por 'type' según tu tabla de antes
+            SELECT a.id, a.filename, a.tipo, CASE WHEN f.archivo_id IS NOT NULL THEN 1 ELSE 0 END as es_favorito -- He corregido 'tipo' por 'type' según tu tabla de antes
             FROM archivos a
             JOIN archivo_personas ap ON a.id = ap.archivo_id
+            LEFT JOIN favoritos f ON a.id = f.archivo_id
             WHERE ap.persona_id = ?
             ORDER BY a.id DESC
             LIMIT ? OFFSET ?;
@@ -609,6 +608,7 @@ def get_archivos_persona(persona_id):
             archivo_id = fila["id"]
             filename = fila["filename"]
             tipo = fila["tipo"]
+            is_favorite = bool(fila["es_favorito"])
             
             # Subconsulta para saber en qué álbumes está ESTE archivo concreto (puede ser más de uno)
             cursor.execute("""
@@ -641,6 +641,7 @@ def get_archivos_persona(persona_id):
                 "tipo": tipo,
                 "media_url": f"/media/{filename}",
                 "thumb_url": thumb_url,
+                "es_favorito": is_favorite,
                 "albumes": albumes_del_archivo # 📦 ¡Tu objeto indexado! Ideal para filtros reactivos o playlists
             })
 
@@ -660,6 +661,47 @@ def get_archivos_persona(persona_id):
     except Exception as e:
         print(f"Error en API unificada: {e}")
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/api/archivos/<int:archivo_id>/favorito', methods=['POST'])
+def toggle_favorito(archivo_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Verificar si el archivo ya está en la tabla de favoritos
+        cursor.execute("SELECT 1 FROM favoritos WHERE archivo_id = ?;", (archivo_id,))
+        es_fav = cursor.fetchone()
+
+        if es_fav:
+            # Caso A: Ya existe -> Lo quitamos de favoritos
+            cursor.execute("DELETE FROM favoritos WHERE archivo_id = ?;", (archivo_id,))
+            nuevo_estado = False
+            mensaje = "Eliminado de favoritos"
+        else:
+            # Caso B: No existe -> Lo añadimos insertando el archivo_id y la fecha actual
+            fecha_actual = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute(
+                "INSERT INTO favoritos (archivo_id, fecha) VALUES (?, ?);", 
+                (archivo_id, fecha_actual)
+            )
+            nuevo_estado = True
+            mensaje = "Añadido a favoritos"
+
+        conn.commit()
+        conn.close()
+
+        # Devuelve el estado real para que el Front-End se sincronice sin errores
+        return jsonify({
+            "status": "success",
+            "archivo_id": archivo_id,
+            "is_favorite": nuevo_estado,
+            "message": mensaje
+        }), 200
+
+    except Exception as e:
+        print(f"Error en la API de favoritos: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     sincronizar_archivos()
