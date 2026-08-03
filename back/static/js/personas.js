@@ -76,8 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 3. CONEXIÓN ASÍNCRONA CON LA API DEL SERVER ---
-    function 
-    fetchPersonas() {
+    function
+        fetchPersonas() {
         // Construimos la URL pasando los parámetros reales que leerá Flask en el backend
         const url = `/api/personas2?page=${currentPage}&limit=${PER_PAGE}&q=${encodeURIComponent(searchQuery)}`;
 
@@ -130,13 +130,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const ultimaVez = p.ultima_aparicion ? `Hace ${p.ultima_aparicion}` : 'Desconocida';
 
             // Bloque condicional por si es portada de su catálogo
-            const coverHTML = p.es_portada ? `<div class="persona-cover-badge">⭐ Top tier</div>` : '';
+            const coverHTML = p.es_portada ? `<div class="persona-cover-badge">⭐ TOP TIER</div>` : '';
+
+            const globalIndex = ((currentPage - 1) * PER_PAGE) + index + 1;
 
             card.innerHTML = `
                     <img class="persona-avatar" src="${avatarImg}" alt="${p.nombre}">
                     <div class="persona-info">
                         <h2 class="persona-name">${p.nombre}</h2>
-                        <div class="persona-stat">#${(index+1)}</div>
+                        <div class="persona-stat">Top ${globalIndex}</div>
                         <div class="persona-stat">📷 ${p.total_archivos} fotografías</div>
                         <div class="persona-stat">🕒 Última aparición: ${ultimaVez}</div>
                         ${coverHTML}

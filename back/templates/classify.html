@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador Rápido Pro</title>
+    <style>
+        :root {
+            --bg-main: #121214;
+            --bg-panel: #1a1a1e;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #2e2e38;
+            --danger: #ef4444;
+            --bg-progress: #2e2e38;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Contenedor Izquierdo: Reproductor */
+        .viewer-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            position: relative;
+            padding: 20px;
+        }
+
+        .viewer-side max-w {
+            max-width: 100%;
+            max-height: 85vh;
+        }
+
+        .viewer-side img,
+        .viewer-side video {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .media-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Contenedor Derecho: Panel de control */
+        .control-side {
+            width: 420px;
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .counter {
+            background: #2e2e38;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .text-input {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Cuadrado / Tags Contenedor */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px dashed var(--border);
+        }
+
+        .tag {
+            background-color: var(--accent);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag .remove-btn {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .tag .remove-btn:hover {
+            opacity: 1;
+        }
+
+        /* Checkbox Favorito Elegante */
+        .fav-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text);
+            user-select: none;
+            padding: 10px 0;
+        }
+
+        .fav-label input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        /* BARRA DE PROGRESO INTEGRADA */
+        .progress-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: var(--bg-progress);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent);
+            transition: width 0.4s ease;
+        }
+
+        .progress-text-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Footer del panel fija */
+        .panel-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: #2e2e38;
+            color: var(--text);
+            max-width: 100px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #3f3f4e;
+        }
+
+        /* Mensaje Cola Vacía */
+        .empty-state {
+            display: none;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LADO IZQUIERDO: VISUALIZADOR -->
+    <div class="viewer-side" id="viewerSide">
+        <div id="mediaContainer">
+            <!-- Aquí se inyecta dinámicamente la imagen o vídeo -->
+        </div>
+        <div class="media-info" id="mediaInfo">Cargando archivo...</div>
+    </div>
+
+    <!-- LADO DERECHO: PANEL FIJO -->
+    <div class="control-side" id="controlSide">
+        <div class="panel-header">
+            <h3>Clasificación Rápida</h3>
+            <span class="counter" id="queueCounter">0 / 0</span>
+        </div>
+
+        <div class="panel-content">
+            <!-- INPUT ÁLBUMES -->
+            <div class="input-group">
+                <label for="albumInput">Álbumes (Enter para añadir)</label>
+                <input type="text" id="albumInput" class="text-input" placeholder="Ej: Gimnasio, Viajes..."
+                    list="albumSuggestions" autocomplete="off">
+                <datalist id="albumSuggestions"></datalist>
+                <div class="tags-container" id="albumTags"></div>
+            </div>
+
+            <!-- INPUT PERSONAS -->
+            <div class="input-group">
+                <label for="personaInput">Personas (Enter para añadir)</label>
+                <input type="text" id="personaInput" class="text-input" placeholder="Ej: Padre, Víctor..."
+                    list="personaSuggestions" autocomplete="off">
+                <datalist id="personaSuggestions"></datalist>
+                <div class="tags-container" id="personaTags"></div>
+            </div>
+
+            <!-- FAVORITO -->
+            <label class="fav-label">
+                <input type="checkbox" id="favCheckbox">
+                ⭐ Marcar como Favorito
+            </label>
+
+            <!-- SECCIÓN BARRA DE PROGRESO -->
+            <div class="progress-wrapper">
+                <label>Progreso Global</label>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+                <div class="progress-text-container">
+                    <span id="progressPercent">0%</span>
+                    <span id="progressCount">0 / 0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <button class="btn btn-secondary" id="skipBtn"
+                title="Saltar sin guardar (Ctrl + Flecha Derecha)">Saltar</button>
+            <button class="btn btn-primary" id="submitBtn" title="Guardar y Siguiente (Ctrl + Enter)">Enviar e ir al
+                sig. ➡️</button>
+        </div>
+    </div>
+
+    <!-- ESTADO VACÍO -->
+    <div class="viewer-side" id="emptyState" style="display:none; width:100vw;">
+        <div class="empty-state" style="display:block;">
+            🎉 ¡Espectacular! No quedan más archivos pendientes por clasificar.
+        </div>
+    </div>
+
+    <script>
+        // Variables de estado del archivo actual
+        let currentArchivoId = null;
+        let selectedAlbumes = [];
+        let selectedPersonas = [];
+        let totalAbsolutoArchivos = 0; // Guardará el valor de tu nuevo endpoint count
+
+        // Elementos del DOM
+        const mediaContainer = document.getElementById('mediaContainer');
+        const mediaInfo = document.getElementById('mediaInfo');
+        const queueCounter = document.getElementById('queueCounter');
+        const albumInput = document.getElementById('albumInput');
+        const albumTags = document.getElementById('albumTags');
+        const personaInput = document.getElementById('personaInput');
+        const personaTags = document.getElementById('personaTags');
+        const favCheckbox = document.getElementById('favCheckbox');
+        const submitBtn = document.getElementById('submitBtn');
+        const skipBtn = document.getElementById('skipBtn');
+
+        // Elementos de la barra de progreso
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressCount = document.getElementById('progressCount');
+
+        // Función para consultar tu nuevo endpoint de conteo absoluto
+        async function actualizarTotalAbsoluto() {
+            try {
+                const res = await fetch('/api/archivos/count');
+                const data = await res.json();
+                if (data.success) {
+                    totalAbsolutoArchivos = data.total_archivos;
+                }
+            } catch (err) {
+                console.error("Error obteniendo el conteo absoluto:", err);
+            }
+        }
+
+        // Cargar Siguiente Archivo de la cola
+        // Cargar Siguiente Archivo de la cola
+        async function fetchNext() {
+            try {
+                // 1. Traemos en paralelo la verdad absoluta directamente desde la Base de Datos
+                const [resTotal, resPendientes] = await Promise.all([
+                    fetch('/api/archivos/count').then(r => r.json()),
+                    fetch('/api/stats/pendientes').then(r => r.json())
+                ]);
+
+                if (resTotal.success) totalAbsolutoArchivos = resTotal.total_archivos;
+
+                // Obtenemos los pendientes reales de tu consulta SQL
+                // Si por algún motivo falla o no viene, dejamos 0 por seguridad
+                const pendientesReales = resPendientes.total_pendientes !== undefined ? resPendientes.total_pendientes : 0;
+
+                const res = await fetch('/api/pendientes/next');
+                const data = await res.json();
+
+                if (data.error || !data.id || pendientesReales === 0) {
+                    // Si ya no quedan registros reales sin asociar en la BD
+                    progressBarFill.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    progressCount.textContent = `${totalAbsolutoArchivos} / ${totalAbsolutoArchivos}`;
+
+                    document.getElementById('viewerSide').style.display = 'none';
+                    document.getElementById('controlSide').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'flex';
+                    return;
+                }
+
+                // Guardar ID actual y resetear interfaz
+                currentArchivoId = data.id;
+                selectedAlbumes = [];
+                selectedPersonas = [];
+                renderTags();
+                favCheckbox.checked = false;
+
+                // Mantenemos el contador de la cola actual de sesión en la cabecera si quieres
+                queueCounter.textContent = `${data.index} / ${data.total}`;
+                mediaInfo.textContent = data.filename;
+
+                // --- EL CÁLCULO REAL CON TU NUEVO ENDPOINT ---
+                // Asignados = Total en la tabla 'archivos' menos los que no tienen ni álbum ni persona
+                const archivosAsignados = Math.max(0, totalAbsolutoArchivos - pendientesReales);
+                const porcentaje = totalAbsolutoArchivos > 0
+                    ? Math.round((archivosAsignados / totalAbsolutoArchivos) * 100)
+                    : 0;
+
+                // Actualizamos la barra y los textos con la realidad de la BD
+                progressBarFill.style.width = `${porcentaje}%`;
+                progressPercent.textContent = `${porcentaje}%`;
+                progressCount.textContent = `${archivosAsignados} / ${totalAbsolutoArchivos}`;
+                // ---------------------------------------------
+
+                // Pintar el reproductor
+                if (data.type === 'image') {
+                    mediaContainer.innerHTML = `<img src="${data.url}" alt="Preview">`;
+                } else {
+                    mediaContainer.innerHTML = `<video src="${data.url}" controls autoplay loop muted></video>`;
+                }
+
+                albumInput.focus();
+
+            } catch (err) {
+                console.error("Error cargando el siguiente archivo:", err);
+            }
+        }
+
+        // Gestión del rendering de Tags visuales en los cuadrados
+        function renderTags() {
+            albumTags.innerHTML = selectedAlbumes.map((tag, idx) =>
+                `<span class="tag">${tag} <span class="remove-btn" onclick="removeTag('album', ${idx})">×</span></span>`
+            ).join('');
+
+            personaTags.innerHTML = selectedPersonas.map((tag, idx) =>
+                `<span class="tag">${tag} <span class="remove-btn" onclick="removeTag('persona', ${idx})">×</span></span>`
+            ).join('');
+        }
+
+        function removeTag(type, idx) {
+            if (type === 'album') selectedAlbumes.splice(idx, 1);
+            if (type === 'persona') selectedPersonas.splice(idx, 1);
+            renderTags();
+        }
+
+        // Configurar Autocompletar dinámico (Consultas asíncronas al vuelo)
+        function setupAutocomplete(inputEl, datalistId, tipo) {
+            inputEl.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                if (query.length < 1) return;
+
+                const res = await fetch(`/api/fast/sugerencias?q=${encodeURIComponent(query)}&tipo=${tipo}`);
+                const sugerencias = await res.json();
+
+                const datalist = document.getElementById(datalistId);
+                datalist.innerHTML = sugerencias.map(s => `<option value="${s}">`).join('');
+            });
+
+            // Capturar la tecla ENTER para meter el tag al cuadrado
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = inputEl.value.trim();
+                    if (!val) return;
+
+                    if (tipo === 'albumes' && !selectedAlbumes.includes(val)) selectedAlbumes.push(val);
+                    if (tipo === 'personas' && !selectedPersonas.includes(val)) selectedPersonas.push(val);
+
+                    inputEl.value = '';
+                    renderTags();
+                }
+            });
+        }
+
+        setupAutocomplete(albumInput, 'albumSuggestions', 'albumes');
+        setupAutocomplete(personaInput, 'personaSuggestions', 'personas');
+
+        // Enviar clasificación al Backend unificado
+        async function guardarYAvanzar() {
+            if (!currentArchivoId) return;
+
+            const payload = {
+                archivo_id: currentArchivoId,
+                albumes: selectedAlbumes,
+                personas: selectedPersonas,
+                favorito: favCheckbox.checked
+            };
+
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/fast/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    await fetchNext();
+                } else {
+                    alert("Error al guardar: " + data.message);
+                }
+            } catch (err) {
+                console.error("Error en el envío masivo:", err);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Listeners de los botones inferiores
+        submitBtn.addEventListener('click', guardarYAvanzar);
+        skipBtn.addEventListener('click', fetchNext);
+
+        // ⚡ ATAJOS DE TECLADO MÁGICOS (Para ir volando)
+        window.addEventListener('keydown', (e) => {
+            // Ctrl + Enter -> Guarda y pasa al siguiente sin tocar el ratón
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                guardarYAvanzar();
+            }
+            // Ctrl + Flecha Derecha -> Salta el archivo actual si no quieres clasificarlo ahora
+            if (e.ctrlKey && e.key === 'ArrowRight') {
+                e.preventDefault();
+                fetchNext();
+            }
+        });
+
+        // Carga inicial al abrir la página
+        fetchNext();
+    </script>
+</body>
+
+</html>

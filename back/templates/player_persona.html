@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Vault - Reproductor</title>
+    <style>
+        :root {
+            --bg-main: #090d16;
+            --bg-interface: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* BARRA SUPERIOR */
+        .player-header {
+            height: 60px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .btn-close-player {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .btn-close-player:hover { color: var(--accent-blue); }
+
+        .media-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* CONTENEDOR CENTRAL DE REPRODUCCIÓN */
+        .viewer-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            background: radial-gradient(circle, #111827 0%, #030712 100%);
+        }
+
+        .media-content {
+            max-width: 100%;
+            max-height: 82vh;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            object-fit: contain;
+        }
+
+        /* BARRA INFERIOR DE METADATOS Y ADHESIVOS */
+        .player-footer {
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .tags-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .tag-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+        
+        .person-tag {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: var(--accent-blue);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .person-tag:hover {
+            background: var(--accent-blue);
+            color: var(--bg-main);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="player-header">
+        <a onclick="window.history.back()" class="btn-close-player">✕ Cerrar Reproductor</a>
+        <div class="media-title">{{ media.filename }}</div>
+        <div></div> </div>
+
+    <div class="viewer-container">
+        {% if media.type == 'video' %}
+            <video class="media-content" controls autoplay>
+                <source src="{{ media.src_url }}" type="video/mp4">
+                Tu navegador no soporta la reproducción de vídeos.
+            </video>
+        {% else %}
+            <img class="media-content" src="{{ media.src_url }}" alt="Imagen Vault">
+        {% endif %}
+    </div>
+
+    <div class="player-footer">
+        <div class="tags-container">
+            <span class="tag-title">Aparece en este archivo:</span>
+            {% for persona in media.personas %}
+                <a href="/personas/{{ persona.id }}" class="person-tag">👤 {{ persona.nombre }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>

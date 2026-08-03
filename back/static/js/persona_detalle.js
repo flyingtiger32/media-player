@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = "media-item-card";
             
             card.onclick = () => {
-                window.location.href = `/player/${file.id}`;
+                window.location.href = `/player/persona?archivo=${file.id}`;
             };
 
             const isVideo = file.tipo === 'video';
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="album-icon">📁</div>
                     <h3 class="album-name">${alb.nombre}</h3>
                 </div>
-                <div class="album-count">📷 ${alb.total_coincidencias} fotos de esta persona aquí</div>
+                <div class="album-count">📷 ${alb.total_coincidencias} archivo/s de esta persona aquí</div>
             `;
             mediaGrid.appendChild(card);
         });
