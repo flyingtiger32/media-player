@@ -114,24 +114,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         personas.forEach((p, index) => {
-            // p.id, p.nombre, p.total_archivos, p.ultima_aparicion, p.es_portada, p.avatar_url
             const card = document.createElement('div');
             card.className = "persona-card";
 
-            // Redirección al hacer click a la vista filtrada (futura implementación)
             card.onclick = () => {
                 window.location.href = `/personas/${p.id}`;
             };
 
-            // Si no tiene avatar configurado, usamos una imagen genérica por defecto
             const avatarImg = p.avatar_url ? p.avatar_url : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80';
-
-            // Formateamos la última aparición de forma limpia humana
             const ultimaVez = p.ultima_aparicion ? `Hace ${p.ultima_aparicion}` : 'Desconocida';
-
-            // Bloque condicional por si es portada de su catálogo
             const coverHTML = p.es_portada ? `<div class="persona-cover-badge">⭐ TOP TIER</div>` : '';
-
             const globalIndex = ((currentPage - 1) * PER_PAGE) + index + 1;
 
             card.innerHTML = `
@@ -140,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h2 class="persona-name">${p.nombre}</h2>
                         <div class="persona-stat">Top ${globalIndex}</div>
                         <div class="persona-stat">📷 ${p.total_archivos} fotografías</div>
+                        <div class="persona-stat">❤️ ${p.total_favoritos} favoritos</div>
                         <div class="persona-stat">🕒 Última aparición: ${ultimaVez}</div>
                         ${coverHTML}
                     </div>

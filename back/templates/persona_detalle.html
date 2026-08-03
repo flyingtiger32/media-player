@@ -16,9 +16,9 @@
             <a href="/personas" class="btn-back">➔ Volver al catálogo</a>
             <div class="header-main-title">
                 <h1 id="persona-title">Cargando...</h1>
-
                 <div class="mode-switch-container">
                     <button id="tab-galeria" class="btn-switch-tab active">Todas las fotos</button>
+                    <button id="tab-favoritos" class="btn-switch-tab">Favoritos</button>
                     <button id="tab-albumes" class="btn-switch-tab">Álbumes asociados</button>
                 </div>
             </div>
@@ -39,15 +39,16 @@
 
     </div>
     <div id="confirm-modal" class="modal-overlay">
-    <div class="modal-box">
-        <h3 class="modal-title">¿Desasociar archivo?</h3>
-        <p class="modal-text">Este archivo dejará de estar vinculado a este perfil, pero no se borrará del almacenamiento físico.</p>
-        <div class="modal-actions-center">
-            <button id="modal-btn-confirm" class="btn-modal btn-modal-confirm">Confirmar desasociación</button>
-            <button id="modal-btn-cancel" class="btn-modal btn-modal-cancel">Cancelar</button>
+        <div class="modal-box">
+            <h3 class="modal-title">¿Desasociar archivo?</h3>
+            <p class="modal-text">Este archivo dejará de estar vinculado a este perfil, pero no se borrará del
+                almacenamiento físico.</p>
+            <div class="modal-actions-center">
+                <button id="modal-btn-confirm" class="btn-modal btn-modal-confirm">Confirmar desasociación</button>
+                <button id="modal-btn-cancel" class="btn-modal btn-modal-cancel">Cancelar</button>
+            </div>
         </div>
     </div>
-</div>
     <script src="{{ url_for('static', filename='js/persona_detalle.js') }}"></script>
 
 </body>

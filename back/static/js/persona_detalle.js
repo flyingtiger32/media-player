@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Extraer el ID de la persona de la URL actual (ej: /personas/31)
     const pathSegments = window.location.pathname.split('/');
     const personaId = pathSegments[pathSegments.length - 1];
 
@@ -9,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const personaTitle = document.getElementById('persona-title');
     const mediaGrid = document.getElementById('media-grid');
     const tabGaleria = document.getElementById('tab-galeria');
+    const tabFavoritos = document.getElementById('tab-favoritos');
     const tabAlbumes = document.getElementById('tab-albumes');
 
     const btnPrev = document.getElementById('btn-prev');
@@ -22,19 +22,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnModalConfirm = document.getElementById('modal-btn-confirm');
     const btnModalCancel = document.getElementById('modal-btn-cancel');
 
-    // Estado local (Fijo a 30 elementos por página)
-    let currentMode = "galeria"; // "galeria" o "albumes"
+    // Estado local ("galeria", "favoritos" o "albumes")
+    let currentMode = "galeria";
     let currentPage = 1;
     let totalPages = 1;
     let cacheData = null;
     const PER_PAGE = 30;
 
+    // Helper para alternar clases activas en los botones de pestaña
+    function setTabActive(activeBtn) {
+        [tabGaleria, tabFavoritos, tabAlbumes].forEach(btn => btn.classList.remove('active'));
+        activeBtn.classList.add('active');
+    }
+
     // --- 1. CONTROLADORES DEL SWITCH INTERRUPTOR ---
     tabGaleria.addEventListener('click', () => {
         if (currentMode === "galeria") return;
         currentMode = "galeria";
-        tabAlbumes.classList.remove('active');
-        tabGaleria.classList.add('active');
+        setTabActive(tabGaleria);
+        currentPage = 1;
+        paginationBox.style.display = "flex";
+        loadData();
+    });
+
+    tabFavoritos.addEventListener('click', () => {
+        if (currentMode === "favoritos") return;
+        currentMode = "favoritos";
+        setTabActive(tabFavoritos);
         currentPage = 1;
         paginationBox.style.display = "flex";
         loadData();
@@ -43,20 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
     tabAlbumes.addEventListener('click', () => {
         if (currentMode === "albumes") return;
         currentMode = "albumes";
-        tabGaleria.classList.remove('active');
-        tabAlbumes.classList.add('active');
+        setTabActive(tabAlbumes);
         currentPage = 1;
         paginationBox.style.display = "none";
         loadData();
     });
 
     function renderizarPantalla() {
-        if (currentMode === "galeria") {
-            paginationBox.style.display = "flex";
-            renderGaleria(cacheData.archivos);
-        } else {
+        if (currentMode === "albumes") {
             paginationBox.style.display = "none";
             renderAlbumes(cacheData.albumes_asociados);
+        } else {
+            // "galeria" o "favoritos" comparten la vista de grid de fotos/vídeos
+            paginationBox.style.display = "flex";
+            renderGaleria(cacheData.archivos);
         }
     }
 
@@ -87,24 +101,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. ORQUESTADOR DE PETICIONES AL BACKEND ---
     function loadData() {
+        // Si entramos a álbumes y ya tenemos los datos en caché, evitamos consulta innecesaria
         if (currentMode === "albumes" && cacheData) {
             renderAlbumes(cacheData.albumes_asociados);
             return;
         }
 
-        fetch(`/api/personas/${personaId}?page=${currentPage}&limit=${PER_PAGE}`)
+        const onlyFavs = currentMode === "favoritos" ? "true" : "false";
+        const url = `/api/personas/${personaId}?page=${currentPage}&limit=${PER_PAGE}&only_favs=${onlyFavs}`;
+
+        fetch(url)
             .then(res => res.json())
             .then(data => {
-                cacheData = data; 
+                cacheData = data;
 
-                // Actualizamos textos estáticos y paginador
-                personaTitle.textContent = `${data.persona_nombre} (${data.total_archivos})`;
+                const tituloModo = currentMode === "favoritos" ? "Favoritos" : "Total";
+                personaTitle.textContent = `${data.persona_nombre} (${data.total_archivos} ${tituloModo})`;
+                
                 totalPages = parseInt(data.total_pages) || 1;
                 currentPage = parseInt(data.current_page) || 1;
                 pageInput.value = currentPage;
                 totalPagesSpan.textContent = totalPages;
 
-                // Atributos disabled nativos
                 btnPrev.disabled = (currentPage <= 1);
                 btnNext.disabled = (currentPage >= totalPages);
 
@@ -116,18 +134,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // --- 4. RENDERIZADO MODO A: GALERÍA DE FOTOS/VÍDEOS ---
+    // --- 4. RENDERIZADO MODO A / B: GALERÍA DE FOTOS/VÍDEOS (TODAS O FAVORITOS) ---
     function renderGaleria(archivos) {
         mediaGrid.innerHTML = "";
         if (!archivos || archivos.length === 0) {
-            mediaGrid.innerHTML = `<div class="status-msg">Esta persona no tiene archivos asociados.</div>`;
+            const msg = currentMode === "favoritos" 
+                ? "Esta persona no tiene archivos marcados como favoritos." 
+                : "Esta persona no tiene archivos asociados.";
+            mediaGrid.innerHTML = `<div class="status-msg">${msg}</div>`;
             return;
         }
 
         archivos.forEach(file => {
             const card = document.createElement('div');
             card.className = "media-item-card";
-            
+
             card.onclick = () => {
                 window.location.href = `/player/persona?archivo=${file.id}`;
             };
@@ -155,12 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnDetach = card.querySelector('.js-btn-detach');
 
             btnFav.addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 ejecutarToggleFavorito(file.id, btnFav);
             });
 
             btnDetach.addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 abrirModalDesasociarReal(file.id);
             });
 
@@ -168,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 5. RENDERIZADO MODO B: CARPETAS DE ÁLBUMES FILTRADOS ---
+    // --- 5. RENDERIZADO MODO C: CARPETAS DE ÁLBUMES FILTRADOS ---
     function renderAlbumes(albumes) {
         mediaGrid.innerHTML = "";
         if (!albumes || albumes.length === 0) {
@@ -204,13 +225,17 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 if (data.status === "success") {
-                    // Tu endpoint de Flask devuelve data.is_favorite según los logs del paso anterior
                     if (data.is_favorite) {
                         boton.classList.add('is-fav');
                         actualizarCacheFavorito(archivoId, true);
                     } else {
                         boton.classList.remove('is-fav');
                         actualizarCacheFavorito(archivoId, false);
+
+                        // Si estamos en la pestaña de Favoritos y desmarcamos uno, recargamos la vista para refrescar el conteo/páginas
+                        if (currentMode === "favoritos") {
+                            loadData();
+                        }
                     }
                 }
             })
@@ -220,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // 🌟 LA FUNCIÓN QUE FALTABA: Mantiene el estado local sincronizado por si cambias de pestaña
     function actualizarCacheFavorito(archivoId, nuevoEstado) {
         if (cacheData && cacheData.archivos) {
             const archivo = cacheData.archivos.find(f => f.id === archivoId);
@@ -246,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === confirmModal) cerrarModal();
     });
 
-    // 💥 LLAMADA INTEGRADA AL ENDPOINT DELETE REAL
     btnModalConfirm.addEventListener('click', () => {
         if (archivoSeleccionadoParaDesasociar) {
             fetch(`/api/personas/${personaId}/desasociar/${archivoSeleccionadoParaDesasociar}`, { 
@@ -255,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => {
                 if (!res.ok) throw new Error("Error en la desasociación desde el backend");
                 cerrarModal();
-                loadData(); // Recarga limpia la galería actual
+                loadData();
             })
             .catch(err => {
                 console.error("Error al desasociar el archivo:", err);

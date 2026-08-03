@@ -526,8 +526,6 @@ def get_catalogo_personas():
         offset = (page - 1) * limit
 
         conn = get_db_connection()
-        # Asegúrate de que las filas se devuelvan como diccionarios si usas SQLite
-        # conn.row_factory = sqlite3.Row 
         cursor = conn.cursor()
 
         # 1. Contar el total para la paginación
@@ -541,7 +539,8 @@ def get_catalogo_personas():
             SELECT 
                 p.id,
                 p.nombre,
-                COUNT(ap.archivo_id) as total_archivos,
+                COUNT(DISTINCT ap.archivo_id) as total_archivos,
+                COUNT(DISTINCT f.archivo_id) as total_favoritos,
                 (
                     SELECT a.filename 
                     FROM archivo_personas ap_sub
@@ -563,6 +562,7 @@ def get_catalogo_personas():
                 ) as ultima_fecha_aparicion
             FROM personas p
             LEFT JOIN archivo_personas ap ON p.id = ap.persona_id
+            LEFT JOIN favoritos f ON ap.archivo_id = f.archivo_id
             WHERE p.nombre LIKE ?
             GROUP BY p.id
             ORDER BY total_archivos DESC, p.nombre ASC
@@ -607,6 +607,7 @@ def get_catalogo_personas():
                 "id": fila["id"],
                 "nombre": fila["nombre"],
                 "total_archivos": fila["total_archivos"],
+                "total_favoritos": fila["total_favoritos"],
                 "ultima_aparicion": tiempo_relativo,
                 "es_portada": es_portada,
                 "avatar_url": avatar_url
@@ -766,7 +767,8 @@ def obtener_sugerencias():
 def get_archivos_persona(persona_id):
     try:
         page = request.args.get('page', default=1, type=int)
-        limit = request.args.get('limit', default=30, type=int) # Ajustado al formato 5x6 (30 por página)
+        limit = request.args.get('limit', default=30, type=int) # Formato 5x6 (30 por página)
+        only_favs = request.args.get('only_favs', default='false').lower() == 'true'
         
         if page < 1: page = 1
         if limit < 1: limit = 30
@@ -783,13 +785,22 @@ def get_archivos_persona(persona_id):
             return jsonify({"error": "Persona no encontrada"}), 404
         nombre_persona = persona['nombre']
 
-        # 2. Paginación: Contar total de archivos de esta persona
-        cursor.execute("SELECT COUNT(*) as total FROM archivo_personas WHERE persona_id = ?;", (persona_id,))
+        # 2. Paginación: Contar total de archivos (Todos vs Solo Favoritos)
+        if only_favs:
+            count_query = """
+                SELECT COUNT(DISTINCT ap.archivo_id) as total 
+                FROM archivo_personas ap
+                JOIN favoritos f ON ap.archivo_id = f.archivo_id
+                WHERE ap.persona_id = ?;
+            """
+        else:
+            count_query = "SELECT COUNT(*) as total FROM archivo_personas WHERE persona_id = ?;"
+
+        cursor.execute(count_query, (persona_id,))
         total_records = cursor.fetchone()['total']
         total_pages = math.ceil(total_records / limit) if total_records > 0 else 1
 
-        # 3. 🔥 NUEVO: Obtener TODOS los álbumes únicos en los que aparece esta persona (Sin importar la página)
-        # Esto nos permite pintar las carpetas del Tab B completas sin perder datos por el LIMIT
+        # 3. Obtener TODOS los álbumes únicos globales asociados a esta persona
         albumes_globales_query = """
             SELECT al.id, al.nombre, COUNT(ap.archivo_id) as total_coincidencias
             FROM albumes al
@@ -801,7 +812,6 @@ def get_archivos_persona(persona_id):
         cursor.execute(albumes_globales_query, (persona_id,))
         filas_albumes = cursor.fetchall()
         
-        # Mapeamos incluyendo la propiedad que tu JS viejo (U Opción B) esperaba
         lista_albumes_asociados = [
             {
                 "id": f["id"], 
@@ -811,20 +821,40 @@ def get_archivos_persona(persona_id):
             for f in filas_albumes
         ]
 
-        # 4. Traer los archivos paginados del Grid
-        main_query = """
-            SELECT a.id, a.filename, a.tipo, CASE WHEN f.archivo_id IS NOT NULL THEN 1 ELSE 0 END as es_favorito -- He corregido 'tipo' por 'type' según tu tabla de antes
-            FROM archivos a
-            JOIN archivo_personas ap ON a.id = ap.archivo_id
-            LEFT JOIN favoritos f ON a.id = f.archivo_id
-            WHERE ap.persona_id = ?
-            ORDER BY a.id DESC
-            LIMIT ? OFFSET ?;
-        """
+        # 4. Traer los archivos paginados (Con soporte de filtro por favoritos)
+        if only_favs:
+            main_query = """
+                SELECT 
+                    a.id, 
+                    a.filename, 
+                    a.tipo, 
+                    1 as es_favorito
+                FROM archivos a
+                JOIN archivo_personas ap ON a.id = ap.archivo_id
+                JOIN favoritos f ON a.id = f.archivo_id
+                WHERE ap.persona_id = ?
+                ORDER BY a.id DESC
+                LIMIT ? OFFSET ?;
+            """
+        else:
+            main_query = """
+                SELECT 
+                    a.id, 
+                    a.filename, 
+                    a.tipo, 
+                    CASE WHEN f.archivo_id IS NOT NULL THEN 1 ELSE 0 END as es_favorito
+                FROM archivos a
+                JOIN archivo_personas ap ON a.id = ap.archivo_id
+                LEFT JOIN favoritos f ON a.id = f.archivo_id
+                WHERE ap.persona_id = ?
+                ORDER BY a.id DESC
+                LIMIT ? OFFSET ?;
+            """
+            
         cursor.execute(main_query, (persona_id, limit, offset))
         filas_archivos = cursor.fetchall()
 
-        # 5. Construir los archivos inyectando sus álbumes internos
+        # 5. Construir la lista de archivos inyectando álbumes internos y miniaturas OpenCV
         lista_archivos = []
         for fila in filas_archivos:
             archivo_id = fila["id"]
@@ -832,7 +862,7 @@ def get_archivos_persona(persona_id):
             tipo = fila["tipo"]
             is_favorite = bool(fila["es_favorito"])
             
-            # Subconsulta para saber en qué álbumes está ESTE archivo concreto (puede ser más de uno)
+            # Subconsulta para saber en qué álbumes está ESTE archivo concreto
             cursor.execute("""
                 SELECT al.id, al.nombre 
                 FROM albumes al
@@ -842,7 +872,7 @@ def get_archivos_persona(persona_id):
             filas_alb_archivo = cursor.fetchall()
             albumes_del_archivo = [{"id": fa["id"], "nombre": fa["nombre"]} for fa in filas_alb_archivo]
 
-            # Procesamiento de miniaturas (On-demand)
+            # Procesamiento de miniaturas On-demand con OpenCV
             if tipo == "video":
                 nombre_miniatura = f"thumb_{filename}.jpg"
                 ruta_miniatura_fisica = os.path.join(AVATAR_CACHE_FOLDER, nombre_miniatura)
@@ -864,19 +894,19 @@ def get_archivos_persona(persona_id):
                 "media_url": f"/media/{filename}",
                 "thumb_url": thumb_url,
                 "es_favorito": is_favorite,
-                "albumes": albumes_del_archivo # 📦 ¡Tu objeto indexado! Ideal para filtros reactivos o playlists
+                "albumes": albumes_del_archivo
             })
 
         conn.close()
 
-        # 6. Respuesta JSON unificada impecable
+        # 6. Respuesta JSON unificada con el estado exacto
         return jsonify({
             "persona_id": persona_id,
             "persona_nombre": nombre_persona,
             "total_archivos": total_records,
             "total_pages": total_pages,
             "current_page": page,
-            "albumes_asociados": lista_albumes_asociados, # 📁 Lista global para el switch sin llamadas extra
+            "albumes_asociados": lista_albumes_asociados,
             "archivos": lista_archivos
         })
 
