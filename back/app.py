@@ -1,6 +1,6 @@
 import os
 import random
-from flask import Flask, jsonify, render_template, send_from_directory, request
+from flask import Flask, jsonify, render_template, send_from_directory, request, abort
 from flask_cors import CORS
 import sqlite3
 import math
@@ -251,6 +251,10 @@ def albumes():
 def favoritos():
     return render_template("favoritos.html")
 
+@app.route('/player/favoritos')
+def player_favoritos():
+    return render_template('player_favoritos.html')
+
 # Endpoint para servir los archivos físicos del disco al navegador
 @app.route("/media/<path:filename>")
 def serve_media(filename):
@@ -333,6 +337,47 @@ def get_next_pendiente():
     indice_pendientes += 1
 
     return jsonify(respuesta)
+
+@app.route('/api/archivos/<int:archivo_id>', methods=['GET'])
+def obtener_detalle_archivo_sql(archivo_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Obtener archivo base
+    cursor.execute("SELECT id, filename, tipo FROM archivos WHERE id = ?", (archivo_id,))
+    archivo = cursor.fetchone()
+
+    if not archivo:
+        conn.close()
+        return jsonify({"status": "error", "message": "Archivo no encontrado"}), 404
+
+    # Obtener personas asociadas
+    cursor.execute("""
+        SELECT p.id, p.nombre 
+        FROM personas p
+        JOIN archivo_personas ap ON p.id = ap.persona_id
+        WHERE ap.archivo_id = ?
+    """, (archivo_id,))
+    personas = [{"id": row["id"], "nombre": row["nombre"]} for row in cursor.fetchall()]
+
+    # Obtener álbumes asociados
+    cursor.execute("""
+        SELECT a.id, a.nombre 
+        FROM albumes a
+        JOIN archivo_albumes aa ON a.id = aa.album_id
+        WHERE aa.archivo_id = ?
+    """, (archivo_id,))
+    albumes = [{"id": row["id"], "nombre": row["nombre"]} for row in cursor.fetchall()]
+
+    conn.close()
+
+    return jsonify({
+        "id": archivo["id"],
+        "filename": archivo["filename"],
+        "tipo": archivo["tipo"],
+        "personas": personas,
+        "albumes": albumes
+    }), 200
 
 @app.route("/classify")
 def vista_clasificacion_rapida():
@@ -986,6 +1031,213 @@ def player_persona():
     except Exception as e:
         print(f"Error en el reproductor de personas: {e}")
         return f"Error interno del servidor: {str(e)}", 500
+    
+
+# --- ENDPOINT 1: OBTENER METADATOS PARA LOS SELECTS DEL MENÚ ---
+@app.route('/api/favoritos/metadatos')
+def get_favoritos_metadatos():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Personas que tienen al menos 1 archivo en favoritos
+        cursor.execute("""
+            SELECT DISTINCT p.id, p.nombre
+            FROM personas p
+            JOIN archivo_personas ap ON p.id = ap.persona_id
+            JOIN favoritos f ON ap.archivo_id = f.archivo_id
+            ORDER BY p.nombre ASC;
+        """)
+        personas = [dict(row) for row in cursor.fetchall()]
+
+        # Álbumes que contienen al menos 1 archivo en favoritos
+        cursor.execute("""
+            SELECT DISTINCT al.id, al.nombre
+            FROM albumes al
+            JOIN archivo_albumes aa ON al.id = aa.album_id
+            JOIN favoritos f ON aa.archivo_id = f.archivo_id
+            ORDER BY al.nombre ASC;
+        """)
+        albumes = [dict(row) for row in cursor.fetchall()]
+
+        conn.close()
+
+        return jsonify({
+            "personas": personas,
+            "albumes": albumes
+        })
+    except Exception as e:
+        print(f"Error en metadatos de favoritos: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# --- ENDPOINT 2: GRID DE FAVORITOS CON FILTROS Y PAGINACIÓN ---
+@app.route('/api/favoritos')
+def get_favoritos_grid():
+    try:
+        page = request.args.get('page', default=1, type=int)
+        limit = request.args.get('limit', default=30, type=int)
+        
+        # Filtros opcionales pasados por Query String (ej: ?personas=1,2&albumes=5)
+        personas_ids = request.args.get('personas', '')  # Cadena '1,2,3'
+        albumes_ids = request.args.get('albumes', '')    # Cadena '4,5'
+
+        if page < 1: page = 1
+        if limit < 1: limit = 30
+        offset = (page - 1) * limit
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Construcción dinámica de la cláusula WHERE y JOINs
+        where_conditions = []
+        params = []
+        joins = ["JOIN favoritos f ON a.id = f.archivo_id"]
+
+        if personas_ids:
+            p_list = [int(p) for p in personas_ids.split(',') if p.isdigit()]
+            if p_list:
+                joins.append("JOIN archivo_personas ap ON a.id = ap.archivo_id")
+                placeholders = ','.join(['?'] * len(p_list))
+                where_conditions.append(f"ap.persona_id IN ({placeholders})")
+                params.extend(p_list)
+
+        if albumes_ids:
+            a_list = [int(a) for a in albumes_ids.split(',') if a.isdigit()]
+            if a_list:
+                joins.append("JOIN archivo_albumes aa ON a.id = aa.archivo_id")
+                placeholders = ','.join(['?'] * len(a_list))
+                where_conditions.append(f"aa.album_id IN ({placeholders})")
+                params.extend(a_list)
+
+        str_joins = " ".join(list(set(joins))) # Evitamos duplicar JOINs
+        str_where = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
+
+        # 1. Contar Total Registros
+        count_query = f"""
+            SELECT COUNT(DISTINCT a.id) as total 
+            FROM archivos a 
+            {str_joins}
+            {str_where};
+        """
+        cursor.execute(count_query, params)
+        total_records = cursor.fetchone()['total']
+        total_pages = math.ceil(total_records / limit) if total_records > 0 else 1
+
+        # 2. Obtener Archivos Paginados
+        main_query = f"""
+            SELECT DISTINCT a.id, a.filename, a.tipo, 1 as es_favorito
+            FROM archivos a
+            {str_joins}
+            {str_where}
+            ORDER BY a.id DESC
+            LIMIT ? OFFSET ?;
+        """
+        params_with_limits = params + [limit, offset]
+        cursor.execute(main_query, params_with_limits)
+        filas_archivos = cursor.fetchall()
+
+        # 3. Procesar Miniaturas y Estructura
+        lista_archivos = []
+        for fila in filas_archivos:
+            archivo_id = fila["id"]
+            filename = fila["filename"]
+            tipo = fila["tipo"]
+
+            if tipo == "video":
+                nombre_miniatura = f"thumb_{filename}.jpg"
+                ruta_miniatura_fisica = os.path.join(AVATAR_CACHE_FOLDER, nombre_miniatura)
+                if not os.path.exists(ruta_miniatura_fisica):
+                    ruta_video_real = os.path.join(MEDIA_FOLDER, filename)
+                    cap = cv2.VideoCapture(ruta_video_real)
+                    success, frame = cap.read()
+                    if success:
+                        cv2.imwrite(ruta_miniatura_fisica, frame)
+                    cap.release()
+                thumb_url = f"/media/cache_avatars/{nombre_miniatura}"
+            else:
+                thumb_url = f"/media/{filename}"
+
+            lista_archivos.append({
+                "id": archivo_id,
+                "filename": filename,
+                "tipo": tipo,
+                "thumb_url": thumb_url,
+                "es_favorito": True
+            })
+
+        conn.close()
+
+        return jsonify({
+            "total_archivos": total_records,
+            "total_pages": total_pages,
+            "current_page": page,
+            "archivos": lista_archivos
+        })
+
+    except Exception as e:
+        print(f"Error en API favoritos: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/api/favoritos/ids', methods=['GET'])
+def obtener_ids_favoritos_filtrados():
+    try:
+        # 1. Obtener y limpiar parámetros (quitando valores vacíos o nulos)
+        personas = [p for p in request.args.getlist('persona') if p and p.isdigit()]
+        albumes = [a for a in request.args.getlist('album') if a and a.isdigit()]
+        tipo = request.args.get('tipo', '').strip()
+
+        # 2. Query base: Seleccionamos los archivo_id de la tabla favoritos
+        query = "SELECT DISTINCT f.archivo_id FROM favoritos f"
+        joins = []
+        where_conditions = []
+        params = []
+
+        # Join opcional con la tabla de archivos si filtráramos por tipo
+        # (Ajusta 'archivos' si tu tabla de medios tiene otro nombre)
+        if tipo:
+            joins.append("JOIN archivos a ON f.archivo_id = a.id")
+            where_conditions.append("a.tipo = ?")
+            params.append(tipo)
+
+        # Si filtramos por personas (IDs de personas asociadas al archivo)
+        if personas:
+            joins.append("JOIN archivo_personas ap ON f.archivo_id = ap.archivo_id")
+            placeholders = ','.join(['?'] * len(personas))
+            where_conditions.append(f"ap.persona_id IN ({placeholders})")
+            params.extend(personas)
+
+        # Si filtramos por álbumes
+        if albumes:
+            joins.append("JOIN archivo_albumes aa ON f.archivo_id = aa.archivo_id")
+            placeholders = ','.join(['?'] * len(albumes))
+            where_conditions.append(f"aa.album_id IN ({placeholders})")
+            params.extend(albumes)
+
+        # Construimos la SQL final
+        if joins:
+            query += " " + " ".join(joins)
+        if where_conditions:
+            query += " WHERE " + " AND ".join(where_conditions)
+            
+
+        # 3. Ejecutar consulta
+        conn=get_db_connection()
+        cursor = conn.cursor() # Usa tu variable de conexión habitual a DB (g.db, db, etc.)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        # Extraer array simple de IDs: [102, 105, 108...]
+        ids = [row[0] for row in rows]
+        
+        return jsonify(ids)
+
+    except Exception as e:
+        # Si algo falla, lo imprimimos en la consola de Flask para ver la traza real
+        print("ERR IN /api/favoritos/ids:", str(e))
+        return jsonify({"error": str(e)}), 500
+
     
 
 @app.route('/api/archivos/<int:archivo_id>/favorito', methods=['POST'])

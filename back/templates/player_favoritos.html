@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Vault - Reproductor Favoritos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/player_favoritos.css') }}">
+</head>
+
+<body>
+
+    <div class="player-container">
+
+        <!-- Bar de navegación superior -->
+        <header class="player-header">
+            <div class="header-left">
+                <a href="/" class="btn-home-nav" title="Volver al inicio">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </a>
+                <a href="/favoritos" class="btn-back">➔ Volver a Favoritos</a>
+            </div>
+
+            <div class="player-title-info">
+                <h2 id="media-filename">Cargando...</h2>
+                <span id="playlist-counter" class="playlist-counter">0 / 0</span>
+            </div>
+
+            <div class="header-right">
+                <button id="btn-toggle-fav" class="btn-overlay-action btn-fav-yellow is-fav" title="Marcar/Desmarcar Favorito">
+                    <svg viewBox="0 0 24 24" width="22" height="22">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Área de reproducción principal -->
+        <main class="media-display-area">
+            <button id="btn-prev-media" class="nav-arrow nav-prev" title="Anterior (flecha izquierda)">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+
+            <div id="media-content" class="media-content-wrapper"></div>
+
+            <button id="btn-next-media" class="nav-arrow nav-next" title="Siguiente (flecha derecha)">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </main>
+
+        <!-- MINI FOOTER -->
+        <footer class="player-footer">
+            <!-- Personas asociadas (Izquierda) -->
+            <div class="footer-section footer-personas">
+                <span class="footer-label">Personas:</span>
+                <div id="tags-personas" class="tags-container"></div>
+            </div>
+
+            <!-- Álbumes asociados (Derecha) -->
+            <div class="footer-section footer-albumes">
+                <span class="footer-label">Álbumes:</span>
+                <div id="tags-albumes" class="tags-container"></div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- MODAL DE ASOCIACIÓN -->
+    <div id="modal-asociar" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Añadir</h3>
+                <button id="btn-close-modal" class="btn-close-x">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="modal-input-search" placeholder="Escribe el nombre o ID..." autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button id="btn-modal-cancel" class="btn-secondary">Cancelar</button>
+                <button id="btn-modal-save" class="btn-primary">Añadir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/player_favoritos.js') }}"></script>
+</body>
+
+</html>
